@@ -1,0 +1,11 @@
+{
+  "contact_intro": "Hai domande, suggerimenti o vuoi semplicemente condividere le tue impressioni sull'opera? Compila il form qui sotto.",
+  "contact_success": "Grazie per il tuo messaggio! Ti risponderemo al più presto.",
+  "donation_links": [
+    {
+      "label": "PayPal",
+      "url": "https://paypal.me/example",
+      "desc": "Supporta l'autore con una donazione libera su PayPal."
+    }
+  ]
+}

@@ -1,0 +1,214 @@
+PRIMA VIVI POI SPIEGHI — Capitolo 42
+Titolo: Promessa
+POV: Andriy
+Luogo: Cella di detenzione, oltre il confine
+Data: marzo 2022
+Stato: espansione
+Parole: 4000+
+
+---
+
+Ci sono tre tipi di silenzio. Il primo è quello dell'assenza di rumore, una rarità geologica che non si trova quasi mai in città. Il secondo è quello dell'assorbimento acustico, quando una stanza è talmente satura di materiali da inghiottire le onde sonore prima che raggiungano l'orecchio. Il terzo, il peggiore, è il silenzio di migliaia di persone che decidono contemporaneamente di smettere di parlare.
+
+Questo era il silenzio che stagnava nella stazione della metropolitana di Pecherska la mattina del 24 febbraio 2022.
+
+Eravamo a circa novanta metri sotto il livello della strada, le scale mobili ferme, le banchine dei treni occupate da una folla eterogenea di famiglie, anziani, gatti nei trasportini e cani nervosi che non abbaiavano perché i cani percepiscono la tensione animale molto prima degli esseri umani. L'architettura sovietica della stazione, con i suoi archi di marmo freddo e i mosaici sbiaditi, non era più un omaggio all'estetica proletaria; era diventata un gigantesco bunker antiatomico improvvisato.
+
+Io ero seduto contro una colonna portante all'estremità nord della banchina. Il mio ThinkPad sbeccato era appoggiato sulle ginocchia incrociate. Indossavo il giubbotto spesso sotto al quale pulsavano, come un organo sussidiario, gli SSD criptati.
+
+Avevo speso le prime tre ore dell'attesa semplicemente cercando di smaltire l'adrenalina residua della fuga dal decimo piano. La fuga, il freddo, la corsa attraverso i vicoli ghiacciati, la discesa nel buio. E ora, l'immobilità.
+
+Attorno a me, i telefoni cellulari illuminavano le facce stanche di una luce azzurrina cadaverica. Tutti cercavano notizie. I canali Telegram vomitavano video di colonne di carri armati, elicotteri abbattuti, palazzi sventrati. Ma c'era un problema strutturale in quelle notizie: erano rumore. Erano il sintomo finale di un'infezione molto più vecchia e profonda. Io non avevo bisogno di guardare i video di Telegram per capire cosa stava succedendo.
+
+Io l'infezione la stavo guardando nel suo codice sorgente.
+
+
+
+Le prime sei ore sotto terra cambiarono la natura stessa di chi vi era rinchiuso. 
+
+All'inizio, nelle primissime ore dell'alba, la gente aveva conservato una parvenza di cortesia borghese. Si lasciava spazio, si chiedeva permesso, si tenevano i bambini vicini scusandosi se pestavano i piedi a qualcuno. Ma la cortesia è un sottoprodotto dell'abbondanza. Quando lo spazio si riduce a quaranta centimetri quadrati per persona e i bagni chimici iniziano a esalare il tanfo della paura collettiva, la borghesia si sgretola.
+
+Una famiglia si era accampata a tre metri da me. Padre, madre e due gemelle di forse cinque anni. Il padre aveva un viso che gridava 'quadro intermedio statale, mutuo da pagare, vacanze in Turchia ad agosto'. Ora fissava una vecchia coperta di lana come se fosse l'ultimo scudo termico tra lui e l'universo. La madre cercava di distrarre le bambine facendole disegnare con dei pastelli su un quaderno a quadretti, un tentativo commovente e disperato di aggrapparsi a una normalità che era evaporata. Ma non potevi ignorare il tremore delle sue mani mentre passava il pastello blu alla figlia.
+
+Li osservavo con un distacco che non era cinismo, ma un meccanismo di difesa ormai radicato. Io non avevo nessuno a cui badare. Non avevo nessuno da rassicurare. La mia solitudine era sempre stata il mio vantaggio competitivo nel cyberspazio, e qui giù, schiacciato contro le piastrelle umide della metropolitana, quella stessa solitudine si traduceva in pura sopravvivenza procedurale.
+
+Eppure, guardarli mi feriva in un modo strano. Mi ricordava che tutte le volte in cui io e Artem avevamo parlato di "asimmetria" e "danni collaterali" o "nodi sacrificabili", avevamo mascherato l'umanità dietro una terminologia sterile. Il 'vettore di danno civile' era quella madre che cercava di far disegnare una casa alla figlia mentre fuori, vere case venivano smembrate dai missili Kh-101.
+
+Mi costrinsi a distogliere lo sguardo. Riaprii lo schermo del ThinkPad. L'unico modo per aiutare quelle persone, o per lo meno per non rendere inutile quello che stavo rischiando, era assicurarmi che il bottino che portavo addosso sopravvivesse.
+
+* * *
+
+Non c'era connessione Wi-Fi sicura laggiù, ma non mi serviva. Avevo la copia locale dei trentasette gigabyte estratti dal Dipartimento del Tesoro. 
+
+Una volta stabilizzato il battito cardiaco, decisi di aprire i file. Non per voyeurismo, ma per la necessità biologica di capire esattamente quanto fossi un bersaglio. Se hai appena rubato qualcosa a qualcuno che ha il potere di farti uccidere, la tua speranza di vita è direttamente proporzionale a quanto conosci bene la natura di ciò che hai rubato.
+
+Lo schermo del portatile era impostato sulla luminosità minima, circondato da un filtro polarizzato che avevo applicato artigianalmente mesi prima per evitare che chiunque seduto di fianco a me potesse leggere lo schermo.
+
+Aprii il terminale e lanciai lo script di decrittazione parziale. I cluster di dati cominciarono a dipanarsi in tabelle, fogli di calcolo, log di transazioni bancarie, direttive ministeriali classificate.
+
+Cominciai dalla superficie. 
+
+La prima cosa che emerse non fu un elenco di spie o di movimenti truppe. Furono trasferimenti SWIFT. Una cascata di transazioni effettuate nei tre giorni precedenti all'invasione. Mentre i telegiornali parlavano di diplomazia dell'ultimo minuto e di sanzioni, decine di milioni di dollari stavano evaporando dalle casse statali ucraine verso conti deposito a Cipro, alle Cayman, in Svizzera e nei Paesi Bassi.
+
+Tracciai un singolo log. *Fondo d'Emergenza per la Manutenzione delle Infrastrutture Civili di Kharkiv.* Erano quasi quaranta milioni di hryvnie. Il 21 febbraio, l'intero fondo era stato frazionato in centotrenta mini-trasferimenti sotto la soglia di allerta internazionale. Erano transitati attraverso falsi contratti di fornitura per "generatori industriali" intestati a società fantasma registrate a Panama, gestite da uno studio legale di Londra. L'approvatore finale della transizione era un sottosegretario al ministero della Difesa, un nome che in quelle stesse ore stava probabilmente facendo appelli patriottici in televisione chiedendo ai civili di resistere.
+
+Mentre Kharkiv veniva probabilmente bombardata, i soldi che avrebbero dovuto garantire il funzionamento degli ospedali della città erano già offshore, trasformati in dividendi intoccabili.
+
+La vertigine che provai non aveva niente a che fare con lo sdegno morale. Era una vertigine matematica. Il livello di precisione di quel drenaggio indicava anni di preparazione. Non era panico dell'ultimo minuto. Era un sistema perfettamente oliato che sfruttava la guerra come distrazione d'ala.
+
+C'è un mito romantico secondo cui la guerra nobilita, crea solidarietà, cancella le distinzioni di classe di fronte al comune orrore. È una menzogna che i sopravvissuti si raccontano per dare un senso al trauma. La guerra è il più grande acceleratore di disuguaglianza del pianeta: chi ha le leve di controllo muove i soldi al sicuro e lascia che a pagare col sangue siano coloro che non hanno l'accesso al sistema.
+
+Scorsi un'altra cartella: *Logistica militare e Approvvigionamenti B, 2018-2021*.
+Una serie di contratti per forniture di giubbotti antiproiettile e caschetti in kevlar destinati alle truppe sul confine del Donbass. La società vincitrice dell'appalto era formalmente ucraina, ma seguendo la ragnatela delle partecipazioni societarie (un processo che mi richiese venti minuti di pura concentrazione sintattica) scoprii che l'azionista di maggioranza era un conglomerato russo con profonde radici nel Cremlino. 
+
+Praticamente, i russi stavano vendendo corazze di infima qualità agli ucraini che avrebbero dovuto combatterli, incassando un ricarico monumentale autorizzato dagli stessi ucraini che li compravano.
+
+Questo era quello che avevo in tasca. Nessuna stronzata patriottica. Nessun bianco e nero. Solo il bilancio contabile di un macello.
+
+Digitai i comandi necessari per controllare l'integrità dei volumi montati sull'SSD. Il software rispose con un verde confortante. I trentasette gigabyte erano sigillati.
+
+Ma averli fisicamente addosso non bastava. Artem me lo aveva insegnato settimane prima, durante una delle nostre sessioni in cui l'aria di Kiev sembrava ancora quella di una normale e noiosa capitale europea. *«Se ti catturano con le mani sui dati, i dati si trasformano nel tuo certificato di morte,»* aveva detto. *«Devi assicurarti che la tua cattura provochi un danno peggiore della tua fuga. Devi costruire un 'Dead Man's Switch', un interruttore di sicurezza a uomo morto.»*
+
+L'avevo fatto. Avevo frammentato le chiavi di decrittazione in tre sezioni. La prima era puramente mnemonica, l'avevo io in testa. La seconda era hardcoded in una partizione del computer di Neda, a Teheran. La terza era l'interruttore. 
+
+Avevo impostato un ping automatizzato verso un server neutro a Singapore. Se non avessi inserito una password di sicurezza ogni quarantanove ore, il server avrebbe inviato una copia grezza e non offuscata dell'indice dei dati rubati a tre testate giornalistiche internazionali, al Pentagono e ai servizi segreti di mezza Europa, indicando esattamente chi aveva svuotato i conti ucraini e chi a Mosca stava coprendo la fuga.
+
+Questo mi rendeva radioattivo. Se il controspionaggio ucraino o l'FSB russa m'avessero messo le mani addosso e il mio ping si fosse fermato, il panico li avrebbe travolti. Il problema logico di un Dead Man's Switch, però, è che richiede che i tuoi nemici *sappiano* che tu ce l'hai. Se non lo sanno, ti sparano lo stesso, e tu muori felice di esserti vendicato tecnicamente, ma morto fisicamente.
+
+L'arroganza intellettuale del programmatore che chiude tutte le vulnerabilità logiche si scontra con l'ottusità del mondo reale. E lì sotto, stringendo il computer, capii di avere un vulnus terribile: se una bomba avesse sventrato la metropolitana di Pecherska e io fossi morto sotto le macerie, nessun ricatto digitale mi avrebbe tenuto in vita. Le bombe non leggono il codice sorgente. La fisica non ha paura dei leak. 
+
+Era questa la crudele limitazione della mia "matrice asimmetrica". Funzionava contro i sistemi governativi, contro le reti di spionaggio, contro l'intelligenza artificiale dell'intelligence avversaria. Ma era completamente inutile contro l'acciaio e il fuoco vivo di una guerra territoriale in cui un ragazzo diciottenne su un mortaio sovietico poteva decidere la mia fine semplicemente sbagliando le coordinate di mezzo grado.
+
+
+
+* * *
+
+La banchina continuava a fremere. All'improvviso si levò un suono ritmico, lontano ma distinto. Non era sopra di noi, era nella stazione stessa.
+
+Era un canto. Un gruppo di donne anziane, avvolte in cappotti pesanti, aveva iniziato a cantare una vecchia melodia popolare. Era un suono fragile, stonato ai margini, ma si diffuse per la metropolitana con la potenza di una scossa tellurica di senso contrario. Alcune ragazze si unirono. Poi un paio di uomini. Non diventò un inno trionfale — mantenne la sua qualità dolente, intima — ma spezzò il terzo silenzio.
+
+Ascoltai quelle voci. Ascoltai quella dignità straziante, quella ostinazione a restare esseri umani quando tutto invitava a diventare lupi. E guardai di nuovo il mio schermo, dove quei burocrati avevano calcolato il peso specifico in oro di ogni goccia del loro sangue.
+
+Ripensai ad Artem. Al modo in cui m'aveva agganciato sei mesi prima, in quel piccolo caffè vicino a Maidan. 
+«A te non frega niente delle bandiere, vero?» mi aveva chiesto.
+«Non coprono i server,» avevo risposto.
+Lui aveva annuito, quel suo modo rigido, meccanico, ma incredibilmente attento. «Michael crede che la guerra sia un crollo dell'ecosistema informativo. Ma io credo che sia molto più semplice: la guerra è quando i corrotti smettono di fingere. Abbiamo bisogno che tu trovi il punto esatto in cui smettono di fingere. Ma sappi una cosa: se lo trovi, non potrai mai più spiegare a nessuno perché sei fuggito.»
+
+Aveva ragione. Se la polizia o i servizi segreti ucraini avessero mi avessero trovato con questi hard drive, sarei stato giustiziato per tradimento e spionaggio in favore di Mosca. Se i russi mi avessero trovato, sarei stato torturato e fatto a pezzi perché quelle liste contenevano l'elenco dei loro collaboratori occulti.
+
+Ero diventato un cancro per entrambi i sistemi.
+
+Spensi lo schermo. Feci un backup criptato aggiuntivo su un'unità USB microscopica che nascosi all'interno della cucitura rinforzata della suola del mio stivale sinistro. Era una misura disperata, ma in un buco nero non c'è mai troppa ridondanza.
+
+Sapevo di sapere troppo.
+Quella consapevolezza ha un peso fisico. Ti fa respirare in modo diverso. Inizi a valutare l'angolo cieco di ogni sguardo che incroci. Fai il calcolo balistico delle superfici intorno a te. 
+
+La donna a dieci metri da me stava dando da mangiare a un bambino un pezzo di pane secco. Un anziano fissava il vuoto massaggiandosi un ginocchio. Loro erano le vittime perfette, inconsapevoli e indifese. 
+
+Io ero vivo, ed ero colpevole di esistere fuori dalla mappa. 
+
+
+L'odore di sudore freddo e terra umida nella metropolitana divenne quasi solido con il passare delle ore. Intorno a mezzogiorno, i telefoni di decine di persone suonarono all'unisono: un avviso della protezione civile. Una colonna di russi lunga quaranta chilometri stava scendendo da nord.
+
+Il silenzio si riempì di mormorii spaventati. La donna con le due bambine chiuse il quaderno e le abbracciò entrambe. 
+
+«Non entreranno qui sotto,» disse una voce vicino a me. «È ingegneria sovietica. Costruita per reggere a un inverno nucleare. Noi siamo i topi che sopravvivono all'inverno nucleare.»
+
+Mi voltai. A due passi da me c'era un vecchio. Non anziano nel senso borghese del termine: vecchio come un pezzo di cuoio lasciato al sole. Indossava un cappotto di fustagno grigio e teneva le mani appoggiate sul manico di legno di un ombrello che non gli sarebbe servito a nulla laggiù. I suoi occhi però erano vispi, duri. Nessun terrore infantile. Aveva lo sguardo di chi aveva già visto crollare due paesi diversi nella sua vita e stava semplicemente calcolando la logistica del terzo.
+
+«Lei è un ottimista,» gli dissi, chiudendo a metà lo schermo del ThinkPad.
+
+«Sono uno che conosce il cemento armato,» rispose lui. Tossì, un rumore secco e raschiante. «E conosco quelli come te.»
+
+«Come me?»
+
+Il vecchio fece un mezzo sorriso senza mostrare i denti. Inclinò la testa verso il mio computer scassato, poi verso il mio giubbotto gonfio all'altezza del petto. «Gente che non scappa a mani vuote. Che si porta dietro il motivo per cui sta scappando.»
+
+Mi irrigidii. La mia mano destra scivolò lentamente verso la tasca interna, dove tenevo un coltello a serramanico. Non era un gesto razionale: le probabilità di usare un coltello in una metropolitana affollata senza farsi linciare dalla reazione di panico erano zero.
+
+Lui se ne accorse. Scosse lentamente la testa. «Tranquillo, ragazzo. Io non voglio sapere cosa hai rubato. Voglio solo dirti che qualunque cosa tu stia portando per conto tuo o di altri, pesa più di te. Ho visto uomini morire per l'oro, per i confini, per i registri segreti del Partito. E sai qual è l'unica cosa che si ricordavano mentre sanguinavano?»
+
+Non risposi.
+
+«Si ricordavano che non potevano mangiare le loro medaglie né il loro oro.» Fece un cenno con la mano ossuta verso le famiglie ammassate lungo i muri di piastrelle sudicie. «Quel computer non ti terrà caldo se salta il riscaldamento. Non ti farà da scudo se sfondano. Fai in modo che valga il buco nero in cui ti sei cacciato.»
+
+Poi si voltò e si rimise a fissare il vuoto davanti a sé, come se la conversazione non fosse mai avvenuta.
+
+Rimasi immobile per un lungo minuto. Le parole del vecchio avevano bucato la mia corazza di cinismo procedurale. Fino a quella notte avevo concepito l'hacking come un'estetica matematica. Il furto dei registri era un atto di superbia architetturale: dimostrare ai generali che potevo svuotare i loro database mentre loro non sapevano nemmeno dove fossero attaccati i cavi.
+
+Ma ora, il peso fisico dei SSD sulla mia gabbia toracica sembrava decuplicato. Stavo portando la prova materiale che questa gente era stata venduta. Non era più una questione di orgoglio tecnico. Era una responsabilità termodinamica. E io detestavo le responsabilità che non potevo crittografare.
+
+
+Quando le sirene sopra di noi smisero di ululare — non perché il pericolo fosse passato, ma perché i difensori stavano risparmiando l'energia della rete elettrica collassante — riaprii il portatile. Decisi di scendere nel nucleo più denso della struttura dei dati. I file di log del decimo livello.
+
+L'interfaccia a riga di comando si riempì di stringhe verde smeraldo su sfondo nero puro. I dati che scorrevano non erano più contratti o bonifici bancari; erano le mappe logistiche, le chiavi scambiate tra Kiev, Mosca e intermediari in Turchia.
+
+C'era una cartella mascherata sotto la directory dei file di sistema temporanei, chiamata 'Protocollo Vash'. 
+
+Aprii gli hash. Non erano ucraini, non erano russi. Erano transazioni private legate ad alcuni broker occidentali che stavano già speculando sul prezzo del grano e dell'energia ancora prima che i carri armati russi passassero il confine a Sumy. Questa documentazione dimostrava che i centri logistici e di smistamento merci nel Mar Nero non erano stati conquistati tatticamente: erano stati subaffittati sotto banco giorni prima dell'invasione, con la complicità dei generali di entrambe le fazioni. Gli ordini di attacco erano modulati per evitare le infrastrutture già cedute ai conglomerati finanziari.
+
+Una guerra reale pagata in sangue dai passanti, e orchestrata come un'asta fallimentare dai padroni.
+
+Artem aveva ragione. La guerra era il momento in cui i corrotti smettevano di fingere.
+
+Mentre un razzo balistico, probabilmente un Iskander, colpiva un rione sopra di noi con un tonfo sordo che fece piovere polvere bianca dai soffitti voltati della metropolitana, il mio cervello fece l'ultimo scatto logico.
+Questo era il materiale su cui due anni dopo si sarebbe fondata l'architettura invisibile di Arkana. Questa era la lava fusa da cui avremmo estratto il tracciato per ricattare l'Occidente e l'Oriente e proteggere le rotte di fuga dei civili. Se la corruzione funzionava come un sistema circolatorio chiuso, la nostra sopravvivenza sarebbe passata attraverso la distruzione mirata delle loro valvole di sicurezza cardiache.
+
+Guardai l'orologio di sistema del mio computer. Le quattro del pomeriggio. Erano dodici ore che ero precipitato nel sottosuolo.
+
+Avevo il backup. Avevo l'infezione mappata.
+Ora dovevo solo restare vivo abbastanza a lungo da permettere al mio Dead Man's Switch di non scattare invano, e a Neda di ricevere il frammento chiave a Teheran. La sfida era appena passata dal piano logico a quello organico: sfuggire ai cani russi e ucraini che stavano per inondare queste scale mobili alla mia ricerca.
+
+*Prima vivi*, aveva scritto Artem.
+Era ora di capire come declinare quel verbo in un paese in cui non potevo più restare, ma da cui le vie d'uscita si stavano chiudendo una stazione della metropolitana dopo l'altra.
+
+
+La decisione di spegnere il computer arrivò con tre secondi di ritardo rispetto all'istinto. Tre secondi, per i processori che gestiscono il traffico delle antenne LTE sopra di noi, sono un'eternità.
+
+Avevo effettuato il backup crittografato, e nel farlo il modulo wireless del ThinkPad aveva tentato un handshake passivo con uno dei ripetitori pubblici della stazione. Non c'era stata trasmissione di dati in chiaro. Ma il mio MAC address, mascherato o meno, aveva rimbalzato contro la rete. Se mi stavano cercando con l'intensità che sospettavo — ovvero con la disperazione di chi ha perso quaranta milioni di hryvnie in segreti di stato prima ancora del suono delle sirene — avevano già triangolato quel rimbalzo.
+
+Non aspettai la conferma visiva. Mi alzai, riponendo il portatile nella borsa, e mi allontanai dalla biglietteria automatica. 
+
+L'aria nella stazione era cambiata di nuovo. Alle quattro e mezza del pomeriggio la folla non si stava più ingrossando in modo organico. Si stava compattando, spinta impercettibilmente verso il centro delle banchine, lontano dagli ingressi. Noi animali sociali abbiamo un radar per l'arrivo dei predatori: sentiamo i micro-movimenti di chi ci sta vicino e, senza accorgercene, ci ritraiamo.
+
+Guardai verso le scale mobili, ormai ferme e usate come gradinate da decine di persone sedute sui cappotti. 
+
+Sei uomini stavano scendendo.
+
+Non avevano uniformi. Indossavano giacconi pesanti di fattura civile, cappelli di lana calati sulle orecchie, stivali sporchi. A un occhio non addestrato potevano sembrare padri di famiglia in cerca di riparo. A me sembravano la cosa più innaturale dell'intera stazione. La loro postura era sbagliata. Chi cerca riparo guarda i volti degli altri, valuta gli spazi vuoti a terra, cerca conforto visivo. Loro guardavano al di sopra della folla, calcolando i colli di bottiglia, le uscite di emergenza, le porte dei quadri elettrici. 
+
+Il primo degli uomini scostò il lembo del cappotto per prendere qualcosa dalla tasca interna — una radio, o forse una torcia termica — e per una frazione di secondo vidi il nero opaco del calcio di una pistola mitragliatrice Kedr. Arma per spazi stretti. Arma russa, o arma ucraina per reparti speciali. In quel momento, la differenza era puramente accademica: entrambe le fazioni volevano le informazioni che portavo e avrebbero sparato con lo stesso disprezzo per i danni collaterali.
+
+
+
+La logica procedurale suggerirebbe di nascondersi tra la folla. Usare i corpi civili come scudo umano invisibile. Ma io avevo visto il Protocollo Vash. Sapevo che chi lavorava a quel livello di corruzione non aveva alcun problema a sacrificare trenta civili innocenti in una finta "esplosione accidentale di gas" pur di recuperare gli hard drive intatti.
+
+Se fossi rimasto tra la gente, quella gente sarebbe morta. 
+
+Mi voltai e puntai verso il fondo del tunnel della linea verde, dove la pavimentazione civile cedeva il passo alle grate di manutenzione e ai piloni di controllo tensione. 
+
+C'era una barricata metallica con un lucchetto ad arco giallo che separava l'area pubblica da quella di servizio tecnica. Approfittai del momento in cui il canto delle donne attirò l'attenzione di una famiglia numerosa vicina alla rete. Scivolai nell'ombra della colonna, estrassi il coltellino a serramanico e usai la piccola leva d'acciaio per forzare il perno del lucchetto. Era un trucco da scassinatore digitale che si applica all'hardware più stupido: non attacchi il cilindro, attacchi la cerniera molle.
+
+Il metallo cliccò. Feci scivolare la catena senza far rumore, scivolai oltre la porta e la richiusi dietro di me, riagganciando il lucchetto solo per estetica.
+
+L'oscurità dei tunnel di manutenzione era assoluta. L'umidità odorava di rame ossidato e di scariche elettriche latenti. Camminai seguendo il binario di sinistra, tenendo una mano appoggiata al muro curvo per non perdere l'orientamento, consapevole che ogni passo mi allontanava dai civili e mi spingeva nell'imbuto cieco che l'architettura sotterranea offriva ai fuggitivi. 
+
+Un rumore sordo e metallico rimbalzò contro i tunnel, seguito da uno squillo di radio criptata. Erano entrati. Avevano trovato la cruna dell'ago logico, e come c'ero arrivato io, ci stavano arrivando loro.
+
+I passi, pesanti, metodici, si fecero strada sulle grate di ferro cinquanta metri dietro di me. Non stavano correndo. Sapevano che non c'erano uscite agibili in quel tratto del terzo livello. Stavano spingendo la preda verso la trappola.
+
+Mentre acceleravo il passo nel buio asfissiante, il gelo dell'adrenalina mi ricordò l'ultima lezione di Artem. 
+*Prima vivi. E se non puoi sfuggire, per lo meno costa caro.* 
+
+La corsa cieca s'interruppe bruscamente quando il corridoio si aprì su un reticolato d'acciaio senza vie d'uscite laterali, con la scala principale bloccata dai detriti di un crollo precedente. 
+
+Il rumore degli anfibi si fece vicino. I fasci di torce alogene fendettero la polvere fine che danzava sollevata dalle vibrazioni delle bombe in superficie. Mi accasciai dietro una scatola di derivazione elettrica arrugginita. 
+
+Non ero scappato dalla rete ucraina. Mi ero solo incanalato dritto verso l'esca. Lì, nel momento in cui mi spogliarono del giaccone, si concluse la prima fase del mio esilio.
+I lupi russi e i corrotti avevano smesso di bussare; stavano semplicemente prendendo possesso del bottino, o di quello che credevano esserlo. E così, in ginocchio sui binari bagnati, l'ombra del carcere inghiottì Andriy. Ma l'informazione era salva. L'esca viva aveva funzionato.
+
+
+
+Non provai a resistere quando le manette di plastica strinsero i miei polsi fino a tagliare la circolazione. Non invocai avvocati, diritti internazionali o convenzioni di Ginevra, perché in quel corridoio umido nessuna di quelle astrazioni aveva mai avuto giurisdizione. Mi limitai a chinare la testa, sentendo il respiro pesante del mastino dell'intelligence moscovita sul mio collo.
+
+Mentre venivo trascinato verso le scale di servizio, lontano dai civili che non si accorsero di nulla, pensai al database al sicuro a Teheran. Avevo barattato la mia libertà per la sopravvivenza procedurale di un archivio. Poteva sembrare una scelta folle, ma nella logica asimmetrica di Michael, io non ero un prigioniero. Ero un seme letale appena piantato nel cuore del sistema nemico. Ed era solo questione di tempo prima che germogliasse.

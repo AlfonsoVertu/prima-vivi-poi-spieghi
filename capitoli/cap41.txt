@@ -1,0 +1,188 @@
+PRIMA VIVI POI SPIEGHI — Capitolo 41
+Titolo: Backup
+POV: Andriy
+Luogo: Kyiv, metropolitana
+Data: febbraio 2022
+Stato: espansione
+Parole: 4000+
+
+---
+
+La prima esplosione non la sentii con le orecchie. La percepii.
+
+Fu un'onda barica, profonda e pesante, che vibrò attraverso il pavimento in calcestruzzo armato infettando persino le solette in gomma anti-statica su cui stavo inginocchiato a lavorare attorno al cablaggio secondario. Lo schermo del mio portatile, incastrato in un groviglio di cavi Ethernet grigiastri sventrati dall'ultimo router prima dell'ufficio del ministro, subì un brusco sbalzo di tensione. I vecchi tubi fluorescenti sul soffitto frinirono e sbatterono le palpebre come un vecchio terrorizzato, spegnendosi per mezzo secondo.
+
+Quando ripresero a irradiare la stanza di un bianco lattiginoso, tutto aveva cambiato colore, proporzione, intenzione.
+
+Non era più una simulazione né le iperboli degli analisti al telegiornale. Il mondo che conoscevamo stava crollando per davvero, e le fiamme iniziavano a mangiarsene i pezzi migliori da nord-est, sopra le strade ghiacciate della mia città.
+
+Rimasi fermo per tre secondi. Non per panico — il panico è uno spreco di glucosio che in queste situazioni non mi posso permettere — ma per calcolo. Tre secondi per riordinare le variabili. L'esplosione era venuta da nordovest. Distanza stimata: tra i due e i quattro chilometri. Non vicina abbastanza da essere immediatamente pericolosa. Non lontana abbastanza da poter essere ignorata.
+
+Tornai al mio schermo.
+
+Il trasferimento dati segnava ottantadue per cento.
+
+---
+
+
+
+Mentre la barra di progressione strisciava con una lentezza esasperante — sessantuno, sessantadue per cento — aprii uno dei file di testo in anteprima grezza. Era un rischio procedurale, ma l'istinto voyeuristico dell'analista aveva avuto la meglio.
+
+Non erano solo numeri. Erano esseri umani ridotti a prezzario.
+
+C'era una cartella denominata 'Protocollo d'Esodo D-7'. Conteneva liste Excel chilometriche. Nomi di famiglie, indirizzi, professioni, e accanto una stima del loro valore di liquidazione. Se la nazione fosse implosa — cosa che in quelle esatte ore stava accadendo all'esterno — i generali e i ministri sapevano già chi avrebbe potuto pagare per passare il confine polacco su corridoi sicuri, e a chi avrebbero potuto vendere le vite degli altri. Erano tariffe. Diecimila dollari per una famiglia di quattro persone se eri un civile utile; cinquantamila se eri un rivale politico in cerca di amnistia.
+
+La banalità di quel male mi fece venire la nausea. Non era l'orrore teatrale dei dittatori dei film. Era una burocrazia della disperazione, compilata con lo stesso font e le stesse caselle con cui si fanno gli inventari dei magazzini di cancelleria. Quei burocrati stavano vendendo il sangue dell'Ucraina ancora prima che i russi iniziassero a versarlo.
+
+Michael mi aveva avvertito. *Non guardare dentro il pozzo, Andriy. Copia e chiudi. L'empatia distrugge l'hard drive e chi lo porta.* 
+
+Ma Artem, mesi prima, mi aveva detto una cosa diversa: l'empatia è il motivo per cui non diventi come i server che hackeri.
+
+Richiusi l'anteprima. Il trasferimento segnava il sessantasette per cento.
+
+La ventola del mio ThinkPad, una vecchia macchina robusta, sfigurata da graffi e adesivi scrostati, gemeva sotto lo sforzo della crittografia AES-256 che stavo applicando in tempo reale ai dati esfiltrati. 
+C'era una bellezza asimmetrica in tutto questo: un hardware da duecento euro comprato al mercato nero che rubava e processava i segreti di una nazione da svariati trilioni di hryvnie. Ma l'asimmetria non ti salva dai bombardamenti, e la termodinamica continuava a peggiorare.
+
+Era un processo lento, insensatamente lento, considerando la quantità impressionante di materiale che stavo estraendo: mazzette digitali, registri segreti e identità fasulle che i vertici avevano compilato negli ultimi otto anni di conflitti intermittenti per corrompere i visti d'uscita ai checkpoint più bui tra Kiev, la Russia, e l'Europa Occidentale. Quei registri definivano quali esseri umani erano meritevoli di espatriare su convogli sicuri, protetti dall'alto. C'erano nomi di funzionari ucraini che vendevano quelle liste all'FSB. C'erano nomi di oligarchi russi che usavano le stesse liste per proteggere i propri collaboratori attraverso il confine.
+
+Erano trentasette gigabyte di marcio istituzionale che i proprietari avevano custodito con cura meticolosa nell'unico modo in cui queste cose vengono custodite: rendendole invisibili a chiunque non avesse il codice d'accesso giusto e la corruzione collaborativa degli amministratori di sistema.
+
+Io non avevo il codice. Avevo qualcosa di meglio: avevo cinque mesi di lavoro preparatorio, una vulnerabilità nell'autenticazione del sistema che Artem aveva identificato nel dicembre precedente e un accesso fisico ai rack che nessun firewall al mondo può difendere se sei già dentro la stanza con il cavo in mano.
+
+Ed io non ero lì per espatriare me stesso, ma per copiare e poi polverizzare l'intero server — un nodo di smistamento governativo marcito dalla corruzione che Michael mi aveva chiesto di intercettare su committenza blindata due mesi fa, prima che Artem mi reclutasse definitivamente.
+
+Il trasferimento salì a ottantasei.
+
+---
+
+La seconda esplosione arrivò pochi minuti dopo la prima, e stavolta il botto fu fragoroso, nitido. Veniva dall'aeroporto a est. I vetri si piegarono — non ruppero, si piegarono, come se l'edificio stesse cercando di assorbire l'onda senza ammettere quanto fosse grande. Il muro esterno assorbì l'impatto emettendo un fischio orrendo di micro-crepe. Le ventole dei rack persero un tono della loro disperata monotonia e suonarono per un istante come una sirena rotta. Sentii grida al piano di sotto — non parole distinguibili, solo l'accelerando caotico di voci che non si aspettavano questo turno di lavoro.
+
+Improvvisamente, la porta in acciaio anti-incendio dietro di me rimbombò sotto una serie di colpi disordinati. Un tonfo, poi un altro. Poi altri ancora, più ritmici, più determinati.
+
+Sapevo già che non sarebbero stati amichevoli.
+
+Il protocollo in codice che mi aveva venduto l'intrusione per quarantotto ore era bruciato sin dall'istante in cui i serbatoi di benzina avevano preso il posto delle penne stilografiche nelle caserme d'arruolamento. Lo stacco d'emergenza alle reti statali era entrato in funzione d'ufficio nel momento in cui i missili avevano iniziato a ridipingere il cielo di Kiev. Qualcuno aveva già incrociato le telecamere del piano, identificato la stanza dei server come anomalia a quest'ora, e mandato qualcuno a risolvere l'anomalia nel modo in cui si risolvono le anomalie in un edificio governativo durante un'invasione militare.
+
+Non erano venuti per arrestarmi. Erano venuti per far sparire tutto — me compreso — e ridurre questa stanza e il suo contenuto a zero prove tangibili del marciume del dipartimento prima che i comandi dell'invasore di Mosca arrivassero a piantare la propria bandiera sulla corruzione ucraina e usarla come leverage.
+
+
+Conoscevo la matematica strutturale di quella lamiera. Era una porta tagliafuoco in grado di resistere novanta minuti a un incendio strutturale, rinforzata con barre di acciaio balistico e fissata su tre punti di ancoraggio indipendenti. Per abbatterla senza gli esplosivi giusti ci voleva tempo, e per farlo senza attivare i sensori anti-sismici dell'edificio ci voleva tecnica. Quelli fuori non stavano usando tecnica. Stavano usando l'ansia bruta di chi sa che le proprie ruberie sono a rischio e ha solo venti minuti per cancellare le tracce.
+
+Ogni colpo riverberava lungo i server come una scossa di terremoto in miniatura. Uno dei dischi rigidi del rack adiacente smise di girare con uno scatto acuto, la spia verde diventò ambra, poi rossa, poi si spense definitivamente. Era l'unità I/O secondaria. Le vibrazioni l'avevano letteralmente uccisa. 
+
+«Novantasei per cento...» sussurrai, ma non era una supplica. Era il conteggio di un algoritmo umano che cerca di mantenere la propria integrità.
+
+L'adrenalina è una tecnologia primitiva, ma l'aspettativa di una morte violenta è qualcosa di molto più complesso. Ti costringe a un bilancio in tempo reale. Che cosa sei disposto a morire? Io non ero un soldato, non avevo mai creduto in nessuna patria al punto da volermi immolare su un altare di bandiere. Credevo nei dati. Credevo che la verità de-criptata, mostrata nella sua miseria algoritmica, valesse più di diecimila discorsi parlamentari. 
+
+Se sfondavano quella porta prima del novantanove per cento, l'integrità del trasferimento sarebbe crollata. Non avrei avuto i decriptatori necessari. Lo sapevo, e sapevo anche che la mia morte, in quel caso, sarebbe stata una banale nota a margine eliminata dai log del sistema. Ma se potevo guadagnare sessanta secondi, li avrei incastrati.
+
+
+
+Le mie nocche erano sbiancate intorno al connettore maledettamente fragile e rigido. Tremavo sotto un brivido nervoso da scarica d'adrenalina che non c'entrava nulla con la quiete intellettuale dei codici alfanumerici a cui ero addestrato. L'adrenalina è una tecnologia primitiva — utile, indispensabile, ma primitiva. Ti accelera i riflessi e ti rallenta il pensiero. Devi usarla senza lasciarti usare da lei.
+
+Aprii le mandate mentali una per una e tenni il respiro al ritmo che avevo imparato: quattro in entrata, sette di pausa, otto in uscita. Non abbastanza da rallentarmi. Abbastanza da non diventare stupido.
+
+---
+
+I pugni contro la lamiera spessa diventarono calci e imprecazioni frenetiche. Il suono stridente di punte da ferro contro la serratura del blindato. Stavano provando a sfondare da due lati, o almeno così percepivo dall'alternanza del suono. Intorno a me, un tanfo umido fognario stava per filtrare dalle condutture d'aria — la pressione esterna aveva cambiato il flusso dell'impianto centralizzato.
+
+Kiev veniva bucata dalle testate di precisione nei quartieri periferici — lo capivo dai flash di luce che filtravano attraverso le persiane metalliche spesse due centimetri — mentre lassù rischiavo di morire ammazzato da funzionari che non ci stavano a veder fuggire i loro miliardi rubati nel server principale del dipartimento.
+
+Il contatore scattò: cento per cento.
+
+La barra progresso del laptop ingoiò tutto l'ammasso di terabyte rubato e lo cifrò su due SSD resistenti agli urti spessi meno del mio palmo della mano, infilati sotto la camicia termica, incastonati nelle costole laterali del giubbotto artigianale protettivo, aderenti allo sterno come un secondo strato di costole digitali. I server governativi, svuotati come bucce di arancia pressata, sibilavano ancora inconsapevoli — ventole che giravano nel vuoto, lampeggianti che continuavano a documentare l'assenza di traffico con la stessa diligenza cieca con cui avevano documentato la sua presenza.
+
+Feci scivolare le dita sui tasti per rilasciare l'ultimo script letale: il wipe magnetico in tre passaggi a frammentazione. Criptare. Sovrascrivere zero. Sovrascrivere casuale. Due minuti, per non lasciare neppure un'orma di polvere fantasma. Formattazione irreversibile d'emergenza — una procedura che avevo scritto tre mesi prima in un pomeriggio di tarda estate, seduto a un tavolo di caffè a Praga, senza sapere esattamente quando avrei dovuto eseguirla ma sapendo che prima o poi avrei dovuto.
+
+
+Il wipe magnetico non è un semplice comando di cancellazione. La cancellazione standard si limita a rimuovere l'indice, lasciando il libro intatto sugli scaffali del disco rigido per chiunque sappia dove cercare. Il wipe che stavo eseguendo era un'opera di demolizione sistematica e feroce.
+
+Prima passava i dati esistenti attraverso un algoritmo di cifratura pesante, trasformando ogni lista di nomi e ogni bilancio offshore in rumore incomprensibile. Poi, iniziava il processo di sovrascrittura. Zero. Uno. Zero. Zero. Ogni bit del disco rigido dei server governativi veniva rimpiazzato fisicamente da stringhe prive di significato. 
+
+Mentre il contatore di frammentazione avanzava verso il completamento, riuscii quasi a percepire il gemito dell'hardware. I processori pompavano calore nel tentativo di gestire il carico massimo simultaneo su tutti i core, cercando di scrivere terabyte di niente sulla superficie dei dischi. L'odore di ozono nella stanza divenne così pungente da farmi lacrimare gli occhi.
+
+«Forza...» sussurrai, guardando la barra di caricamento tremare sull'ottantacinque per cento. 
+
+In quel momento, seppi che non m'importava dei soldi. Non m'era mai importato. Potevo sbancare mezza Europa orientale se mi fossi unito alle crew di ransomware di San Pietroburgo, quelle che bloccano gli ospedali e le reti elettriche in cambio di monero anonimi. Ma l'etica hacker è una religione strana: non credi in Dio, non credi nello Stato, ma finisci per credere nella pulizia del codice e nella libertà dell'informazione nuda. Stavo bruciando i server perché il codice mi diceva, con una chiarezza che nessuna legge umana possiede, che l'asimmetria di potere tra quei burocrati corrotti e la gente comune che sfollava per le strade era un errore di sistema insopportabile.
+
+La lanciò e partì senza errori.
+
+Dovevo guadagnare due minuti.
+
+---
+
+Un rumore meccanico esplosivo mandò la toppa della serratura all'inferno con un trillo metallico impazzito e un puzzo feroce di gas disossidante acido in circolo — stavano usando un attrezzo da idraulico militare, o qualcosa di equivalente, per tagliare piuttosto che sfondare. Un varco largo quindici centimetri si aprì nel ferro spesso un dito della porta d'emergenza anti-incendio, e lo sbocco scuro di una canna d'arma fece capolino, tastando l'oscurità illuminata dai neon e cercando il mio spostamento imprudente dietro al mobile di alimentazione UPS al centro della stanza.
+
+Mi strinsi attorno alla borsa da viaggio imbottita.
+
+Chiusi l'Hinge del laptop con un tonfo ovattato.
+
+E mi tuffai a testa bassa sul linoleum anti-statico nel momento esatto in cui due raffiche in sequenza controllata devastarono la fila di rack alle mie spalle. Il suono fu assordante nell'ambiente chiuso — non come nelle simulazioni, non come nei film: più vicino al suono di un martello pneumatico con la certezza aggiunta che ogni proiettile fendeva plastica progettata per decenni di funzionamento e ora diventata temporanea come tutto il resto.
+
+Schegge di plastica ABS bruciata e cavi smembrati si dispersero lungo il pavimento. Lì sotto, dove la vista non faceva la differenza, fu puro istinto. Stridendo i denti arrampicai in una scivolata verso la rampa anti-allagamento del cablaggio, scalciando nell'imbrunire improvvisato la botola di ventilazione bassa a sfiato verso la strada sul retro — la mia via di fuga preparata due settimane prima, quando avevo fatto il sopralluogo fingendomi tecnico del fornitore di servizi. La botola cedette al terzo calcio. Freddo esterno.
+
+L'allarme rosso e isterico della città squarciava l'aria esterna. Il fumo delle micce, degli o-ring dei server squarciati dal piombo mi bruciava gli occhi e la gola.
+
+E mentre balzavo fuori sul cornicione assiderato di febbraio e premevo me stesso nel crepaccio tra la struttura e il muro perimetrale, compresi d'un botto tutto.
+
+---
+
+Potevano abbattere antenne e muraglie della nazione intera. Potevano fare esplodere ogni server di ogni ufficio governativo di Kiev, Budapest, Varsavia. Potevano mettere fuori uso ogni database che conoscevano.
+
+Ma i trentasette gigabyte che portavo attaccati alle costole erano già al sicuro. Erano cifrati con una chiave che esisteva solo nella mia testa e in un backup su un sistema che non conoscevano — il sistema di Neda a Teheran, l'unico nodo che avevamo deliberatamente tenuto fuori dalla mappa operativa principale, protetto dalla localizzazione geografica ostile alla sorveglianza occidentale e dalla abilità di una donna che avevo conosciuto solo attraverso messaggi cifrati ma di cui mi fidavo con la fiducia specifica che si sviluppa tra chi condivide rischi che non si possono spiegare a nessuno.
+
+Io li avrei inseguiti attraverso il vuoto della matrice asimmetrica che Michael chiamava sopravvivenza primaria. La notte si allargava di colpi sordi e disperazione mentre sparivo giù dalla fune industriale tra la foschia di febbraio.
+
+Atterrai duramente su una piattaforma di cemento esterna, rullando su me stesso per disperdere l'energia cinetica, esattamente come avevo provato in palestra. Il gelo mi riempì i polmoni con la violenza di uno schiaffo.
+
+Fuori, Kyiv non era più la città stanca e disillusa che conoscevo. Si era trasformata nel giro di quaranta minuti in un palcoscenico di apocalisse balistica. Le sirene antiaeree continuavano il loro ululato sincopato, modulandolo come il pianto di una creatura preistorica. Sirene della polizia, suoni d'ambulanze e clacson isterici creavano una base ritmica sotto i colpi sordi, continui, di artiglieria pesante che stavano cadendo lungo i sobborghi settentrionali.
+
+Restai acquattato nell'ombra del cornicione per un minuto intero, cercando di normalizzare il battito cardiaco. Il cielo a est non era ancora chiaro per l'alba, ma era illuminato dal riverbero arancione dei depositi di carburante in fiamme. Pioveva una polvere nera che sapeva di ozono bruciato e di disperazione civile.
+
+Mi alzai.
+
+Non ero più un operatore in latenza. Non ero l'ingegnere senza nome seduto dietro tre proxy e una VPN anonima. Ero un pezzo di carne, con il petto rivestito di memorie a stato solido, nel mezzo di una nazione che iniziava a bruciare. La vulnerabilità del mio stesso corpo improvvisamente oscurò qualsiasi astrazione informatica. La stringa di codice più sicura al mondo non ferma uno Shrapnel. 
+
+C'era una lunga nottata davanti, e le stazioni della metropolitana erano già invase da persone cariche di valigie silenziose e di una paura cruda e inarticolata. Sarei sceso là sotto, non per fuggire dalla città, ma per scomparire nei suoi vasi sanguigni.
+
+Artem aveva ragione. Non puoi programmare la sopravvivenza in anticipo, puoi solo restare vivo abbastanza a lungo da rendere l'algoritmo utile a qualcun altro. Quel 'Prima vivi' non era più un concetto teorico da decriptare: era la gravità stessa che mi spingeva a correre lungo quel vicolo ghiacciato tenendo la testa bassa, prima ancora che sorgesse il sole su un paese che non sarebbe mai più stato lo stesso.
+
+
+
+
+Aggrappato alla fune industriale, mentre il buio fuma di esplosioni inghiottiva il mio profilo, la mente viaggiò per un millisecondo a una conversazione crittografata avuta con Artem settimane prima.
+
+*«Michael dice che le strutture simmetriche crollano,»* mi aveva scritto Artem, usando una connessione P2P mascherata dal traffico di un videogioco online. *«Eserciti contro eserciti. Stati contro Stati. L'unico modo per proteggere qualcosa di valore è toglierlo dalla scacchiera. Devi farlo sparire nell'asimmetria.»*
+
+L'asimmetria. Era il principio fondante di Arkana, anche se all'epoca non aveva ancora quel nome, né la forma architettonica che avrebbe assunto venticinque anni dopo nel Mediterraneo. All'epoca, l'asimmetria era semplicemente l'idea di usare la vulnerabilità come arma. Io non potevo fermare l'artiglieria moscovita. Non potevo processare i generali ucraini corrotti. Ma potevo prendergli l'asset più prezioso — l'informazione cruda — e infilarlo in un hard drive spesso cinque millimetri, cucito contro la mia pelle fredda, e mandarlo fuori radar verso l'Iran, verso Neda.
+
+Mentre scendevo, i muscoli delle braccia bruciavano per lo sforzo imprevisto e il vento trasversale minacciava di sbattermi contro l'intonaco scrostato del decimo piano. Lasciai scorrere la fune tra i guanti di pelle ruvida, sentendo il calore dell'attrito e il morso del vuoto sotto di me. 
+
+Kyiv mi stava già inghiottendo. 
+
+A dieci metri da terra, un razzo a frammentazione illuminò l'intera zona industriale a nord, disegnando le ombre della città come uno scheletro esposto. 
+Non era solo una guerra. Era il crollo di un intero protocollo di civilizzazione, una gigantesca stringa d'errore lanciata senza preavviso su cinquanta milioni di esseri umani.
+
+Toccai terra tra i cassonetti della spazzatura. Mollai la fune, mi tirai su il cappuccio del giubbotto logoro e iniziai a correre verso il buio della discesa sotterranea.
+
+Prima che la cenere cadesse, avrei fatto trovare loro soltanto terra incrostata.
+
+
+L'ingresso della metropolitana di Pecherska odorava di frenata di treni, caffè stantio e paura collettiva compressa in uno spazio senza ventilazione. Quando scesi i gradini scivolosi coperti di terriccio e neve fusa, l'impatto con l'umanità ammassata fu quasi più destabilizzante delle bombe.
+
+C'erano migliaia di persone. Famiglie intere sedute su coperte isotermiche, bambini che dormivano sopra gabbie di trasportini per gatti, anziani che fissavano le piastrelle del pavimento con l'espressione vuota di chi ha appena perso tutto ciò che conosceva. La stazione, progettata per il transito, era diventata istantaneamente l'ultimo rifugio.
+
+Nel mondo digitale, una crisi si manifesta come un picco di traffico anomalo o un errore 404. La latenza aumenta, i pacchetti si perdono, i registri si riempiono di stringhe in rosso. Ma qui sotto, l'errore di sistema aveva il suono di un bambino che piangeva perché aveva freddo e l'odore del sudore di madri che non sapevano come spiegare l'inspiegabile.
+
+Mi feci spazio lentamente tra i corpi, stringendo il giubbotto al petto, sentendo il calore rassicurante e colpevole degli SSD nascosti. Quei dischi contenevano i nomi di chi aveva causato o lucrato su tutto questo. Contenevano la radiografia della cancrena politica che ci aveva portato al collasso. In quel momento, immerso in una stiva umana sepolta a cinquanta metri sotto il livello stradale, capii la distinzione tra informazione e materia.
+
+L'informazione da sola non scalda un corpo. Non respinge un missile.
+Ma senza l'informazione giusta, posizionata nel posto giusto al momento giusto, tutta questa materia umana non avrebbe avuto alcuna possibilità contro l'asimmetria del potere.
+
+Trovai un angolo libero vicino a una vecchia distributrice automatica di biglietti fuori uso. Mi accasciai contro il muro piastrellato, chiusi gli occhi e lasciai che il rumore bianco della folla sostituisse per un attimo il ronzio delle ventole e degli allarmi. Ero vivo. Avevo i dati. E per quanto potesse valere nel mezzo di un paese che andava in fiamme, mi bastava.
+
+Prima vivi.
+
+Prima di ogni altra cosa: vivere.
+
+Poi — con chi avrebbe avuto ancora orecchie per ascoltare — la spiegazione.

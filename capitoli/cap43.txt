@@ -1,0 +1,210 @@
+PRIMA VIVI POI SPIEGHI — Capitolo 43
+Titolo: Buco nero
+POV: Andriy
+Luogo: Struttura di massima sicurezza, Rostov sul Don
+Data: aprile 2022
+Stato: espansione
+Parole: 4000+
+
+---
+
+Ci sono tre modi in cui un corpo umano reagisce a un impatto percussivo imprevisto. Il primo è l'irrigidimento muscolare: la carne cerca di farsi pietra prima che il colpo arrivi. Il secondo è l'abbandono: il sistema nervoso si scollega preventivamente, accettando il danno per minimizzare le lacerazioni profonde. Il terzo è il tentativo di ritirata, l'impulso atavico di strisciare via.
+
+Ero arrivato al punto in cui li avevo esauriti tutti e tre.
+
+Mi chiamo Andriy. Ero seduto — o meglio, ancorato per forza di gravità e cinghie di cuoio marcio — su una sedia metallica bullonata a un pavimento di linoleum scrostato. C'era un odore, in quella stanza senza finestre, che non apparteneva a nessuna metropolitana o server farm: sapeva di disinfettante chimico scadente versato direttamente sul sangue raggrumato, un tentativo burocratico di nascondere la fisiologia del dolore.
+
+Erano passate settantadue ore da quando i cacciatori senza divisa mi avevano bloccato nei tunnel di servizio a Kiev. Non mi avevano ucciso sul posto perché avevano trovato gli SSD cuciti nel mio giubbotto. Avevano capito due cose simultaneamente: che avevo in mano il registro della loro corruzione, e che i dischi erano sigillati dietro una crittografia AES a 256 bit che avrebbe richiesto duemila anni di calcolo per essere forzata, a meno di non possedere il seme della chiave.
+
+Il seme stava nella mia testa.
+O meglio, un terzo del seme stava nella mia testa. 
+
+
+
+Le prime quarantotto ore nella cella di transito mi avevano insegnato che la deprivazione sensoriale non è un vuoto. È un amplificatore. 
+
+Quando ti tolgono la luce naturale, l'orologio e il suono del traffico, il tuo cervello inizia a processare i micro-dati con un'intensità quasi paranoica. Sdraiato sul cemento gelido prima che mi legassero alla sedia, avevo mappato la struttura ascoltandola respirare. Il ronzio a bassa frequenza del generatore diesel si trovava sotto di me, leggermente spostato verso est. I passi delle guardie nel corridoio avevano una cadenza metallica, il che indicava una pavimentazione in grigliato d'acciaio su cemento armato: tipica architettura da base logistica sovietica riconvertita.
+
+Sapevo di non essere più su suolo ucraino. L'umidità odorava di torbiera, non di fiume. Eravamo probabilmente spostati verso il confine bielorusso, in una zona grigia dove la giurisdizione svaniva e i buchi neri amministrativi diventavano operativi. 
+
+Per tutta la mia vita adulta avevo vissuto nell'immensità sconfinata delle reti. Se ero a Kiev, potevo passeggiare digitalmente nei server di una lavanderia a gettoni automatizzata a Tokyo, o nei registri portuali di Rotterdam. Non avevo confini. Ma in quella cella, il confine era la mia epidermide. L'universo si era compresso a tre metri quadrati di intonaco scrostato. E in questa contrazione fisica, l'unica cosa che si espandeva era il tempo. Sessanta secondi diventavano un'unità di misura insopportabile quando aspettavi il rumore della chiave nella serratura. 
+
+E quando la chiave aveva finalmente girato, non erano venuti per fare domande. Erano venuti per azzerare il contachilometri della mia resistenza.
+
+Il tizio che mi stava di fronte non era un soldato. Le divise sono rassicuranti, in un certo senso: rispondono a una catena di comando, a un regolamento. Quest'uomo indossava un maglione grigio a collo alto e pantaloni civili di buona fattura. Aveva le nocche della mano destra escoriate e una tazza di caffè solubile nella sinistra. 
+
+«Proviamo di nuovo,» disse, in un russo piatto, privo di accenti regionali. «I numeri della prima stringa. Hai perso già tre denti, ingegnere. Non c'è nessun premio per chi muore con l'arcata dentale distrutta a trent'anni.»
+
+Sputai un grumo di saliva densa, scura, che finì a lato della sua scarpa perfettamente lucida. Il dolore alla mascella pulsava in sincronia con il mio battito cardiaco, trasformando ogni respiro in una fitta acuminata dietro l'occhio sinistro.
+
+«Te l'ho... spiegato,» sussurrai, la voce arrochita dalle ore passate a soffocare le urla. «Se inserisci un PIN errato per più di tre volte, il firmware del controller... farà un flash del disco. Troverete solo una distesa di zero.»
+
+«Non mi interessano le lezioni di informatica,» sospirò l'uomo dal maglione grigio. Fece un cenno minimo col capo. 
+
+La botta arrivò da dietro. L'uomo che non avevo visto, quello che restava sempre ai margini del mio campo visivo ristretto dal gonfiore, mi colpì all'altezza dei reni con qualcosa che aveva il peso specifico e la rigidità di un tubo di gomma industriale pieno di sabbia. 
+L'aria abbandonò i miei polmoni. L'oscurità si chiuse a imbuto attorno alla mia vista periferica. Sentii un rantolo che non riconobbi come mio, e la sedia scricchiolò mentre il mio corpo cercava disperatamente di piegarsi in avanti, trattenuto dalle cinghie.
+
+L'interrogatorio non è una ricerca di informazioni. È un processo di scomposizione della volontà. Loro non vogliono sapere la risposta; vogliono che tu senta un bisogno fisico, insopportabile e primordiale, di dargliela per fermare il tempo.
+
+
+Esiste una procedura per gestire il dolore acuto che avevo letto anni prima in un documento declassificato sul SERE (Survival, Evasion, Resistance, and Escape). Consiste nello scomporre la sensazione in vettori fisici neutri. Non dirsi "fa male". Dirsi "la terminazione nervosa L4 trasmette calore acuto". 
+
+Mentre il tubo di gomma industriale si abbatteva di nuovo, cercai di lanciare la procedura. La terminazione nervosa L4 trasmise calore acuto. La cassa toracica risuonò come un tamburo rotto. Il polmone destro andò in spasmo. La logica fallì miseramente. Fa soltanto un fottuto, primordiale male.
+
+La mente rettiliana prende il sopravvento e l'unica cosa che l'istinto animale vuole fare è urlare per fermare l'aggressione o scattare per scappare. Trattenuto dalle cinghie, non potevo scappare. Ma mi rifiutavo di urlare.
+
+Chiusi l'occhio che non era inchiostrato di sangue e forzai la mia CPU interna a fare un recupero dal disco di memoria. Un file isolato, protetto dalla scrittura. 
+
+Kiev, autunno 2021. Un caffè economico vicino al quartiere di Podil, il vapore della macchina per espresso che copriva i rumori della strada. Artem era seduto di fronte a me, mangiando una torta di mele con la metodicità di chi divide il cibo in frazioni matematiche.
+«La debolezza dei sistemi di sicurezza governativi,» stava dicendo Artem, pulendosi gli occhiali con il tovagliolo, «è che si basano sul sacrificio dei soldati semplici per proteggere il generale. Noi dobbiamo costruire un sistema inverso. Un'architettura in cui ogni singolo nodo è così vile, così attaccato alla propria sopravvivenza, che diventa impossibile corromperlo con il martirio.»
+
+Ricordo di aver riso. Lo avevo ritenuto un paradosso cinico. «Stai dicendo che dobbiamo assumere solo codardi?»
+«Sto dicendo che dobbiamo assumere persone che tengono alla propria vita più che a qualsiasi ideale. Una spia che crede nel KGB morirà per il KGB, portandosi i segreti nella tomba, e i segreti non ci servono a nulla se sono sepolti. Un operatore di Arkana non deve mai voler morire. Deve fare qualunque patto, dire qualunque menzogna, tradire qualunque aspettativa etica, pur di restare vivo.»
+
+Mentre l'uomo col maglione grigio mi sollevava il mento in modo brutale con l'estremità dura del tubo di gomma, quel ricordo cristallizzò la mia risoluzione.
+
+Io non ero un martire ucraino nella mani dei carnefici russi. Io ero un nodo in un'architettura che Artem e Michael stavano tessendo su scala globale. Il sangue che colava dal mio naso e si infiltrava tra le mie labbra spaccate non era il prezzo per la libertà della nazione. Era il costo procedurale di quel momento. 
+
+*Fingiti un ingranaggio utile,* aveva detto Artem. 
+
+Avvertii il respiro dell'interrogatore sulla mia guancia. Era il momento in cui avrebbero intensificato la pressione fino alla rottura organica. Il momento in cui i tendini si strappano e le ossa si incrinano permanentemente. Ed era il momento esatto in cui dovevo eseguire l'override del mio stesso eroismo.
+
+
+
+«Sei intelligente, Andriy. Sai che la guerra fuori sta cambiando.» L'uomo del maglione si sedette sul bordo dell'unico tavolo presente nella stanza, mettendosi esattamente al mio livello visivo. «I tizi a cui hai rubato i dati? Quelli a Kiev? Li spodesteremo entro due settimane. I loro conti bancari diventeranno i nostri conti bancari. Quelli dei tuoi registri sono soldi che appartengono già allo Stato Maggiore che io rappresento. I tuoi amici...» si interruppe, sorridendo in modo sgradevole e minuscolo. «Questo sedicente Michael, e l'architetto, Artem. Pensi che verranno a cercarti in un buco di transito tra il confine russo e la Romania?»
+
+Questa era la frattura. 
+
+Il dolore fisico può essere compartimentalizzato. Puoi immaginarlo come un errore in un circuito stampato periferico, isolarlo, mentre la cpu centrale continua a girare. Ma l'isolamento psicologico è l'attacco zero-day che ti distrugge da dentro. Stava cercando di instillarmi l'idea che il mio sacrificio fosse inutile. Che il mio "Dead Man's Switch" non fosse scattato, o che peggio ancora, fosse scattato cadendo nel vuoto di un occidente distratto.
+
+Pensai a Neda. Alla sua voce frammentata attraverso i nodi civetta di Teheran. Pensai ad Artem, alla calma clinica con cui mangiava una mela mentre mi spiegava come costruire la crittografia frammentata.
+
+*Promettimi una cosa, Andriy,* mi aveva detto Artem quell'ultima volta nel caffè. *Se ti prendono, non fingere di essere un eroe. Gli eroi muoiono in dodici ore. I russi uccidono gli eroi perché sono divertenti da piegare. Fingiti un ingranaggio utile. Promettimi che sarai un miserabile sopravvissuto. Prima vivi.*
+
+La promessa.
+Era quello il nucleo. Non avevo mai promesso di non parlare. Avevo promesso di vivere. 
+
+Il server su cui avevo impostato la dead man's switch stava ticchettando, da qualche parte a Singapore. Mancavano forse sedici ore prima che rilasciasse la copia non offuscata dell'indice. Se i russi avessero continuato a picchiarmi a morte, o se lo avessero fermato distruggendomi il cervello, l'indice sarebbe diventato di dominio pubblico. Ma il rilascio avrebbe scatenato il panico, non avrebbe garantito la sopravvivenza dei dati grezzi che Neda doveva assemblare.
+
+Per far funzionare il sistema asimmetrico disegnato da Michael, io dovevo fungere contemporaneamente da esca e da ostaggio intatto. Dovevo far credere a questi macellai di poter aprire la cassaforte.
+
+Sollevai la testa. La pelle tesa attorno allo zigomo spaccato bruciava atrocemente.
+«Trecentocinquanta,» dissi, emettendo un fischio umido attraverso uno spacco nel labbro inferiore.
+
+L'uomo col maglione ristagnò il movimento. Si sporse in avanti. L'altro aguzzino, dietro di me, fermò il dondolio del tubo di gomma.
+«Cosa?»
+
+«Trecentocinquanta gigabyte. Quelli... che ho rubato dal server secondario del catasto, che voi non sapete... di non avere.» Usai ogni singola briciola di energia per non crollare in avanti. «Pensate che... l'SSD che ho in tasca sia tutto? C'è una chiave di contingenza per i registri immobiliari. Oligarchi russi che hanno comprato mezza Kiev negli ultimi otto anni. Le coordinate degli asset.» 
+
+Menzogna. Pura, cristallina menzogna strutturata sul loro stesso codice sorgente di avidità. Loro non erano lì per patriottismo; erano lì per la razzia.
+
+Gli occhi del russo si assottigliarono. L'incertezza è un virus meraviglioso. Fino a dieci secondi prima, io ero un forziere chiuso contenente quaranta milioni di dollari trafugati. Ora, all'improvviso, ero un forziere che conteneva la chiave per altre centinaia di milioni, diffusi fuori dalla portata dei loro carri armati.
+
+«E dov'è questa chiave?» chiese lui, la voce più bassa di un'ottava.
+
+«In testa mia,» risposi. Trattenni il respiro, preparando i muscoli all'inevitabile reazione chimica. «Ma ho bisogno che la mia testa resti attaccata al collo senza traumi da commozione cerebrale, se volete che ricordi qual è il limite esatto dei tentativi prima della formattazione logica.»
+
+Il russo rimase immobile. La stanza sembrava trattenere il respiro insieme a me. Il dolore ai reni stava irradiandosi lungo la colonna vertebrale in ondate calde e nauseanti. Sapevo di aver appena lanciato un dado sul tavolo di una roulette russa (e l'ironia grottesca di quell'espressione non mi sfuggì). Se avesse pensato che stessi bluffando, mi avrebbe ucciso lì, per orgoglio, per punire l'insubordinazione.
+
+Ma gli ingranaggi dell'avidità sono lenti e potenti. Fissò il mio viso tumefatto.
+«Slegatelo,» ordinò improvvisamente, senza voltarsi, indirizzando la voce all'uomo alle mie Spalle. «Portatelo alla struttura tre. Chiamate un fottuto medico e fategli chiudere il taglio sullo zigomo.»
+
+Il tonfo sordo delle fibbie che si allentavano fu l'equivalente acustico di un'assoluzione temporanea. 
+
+
+Sdraiato sul fianco, con il naso premuto contro il linoleum che odorava di candeggina industriale, feci un inventario mentale dei danni. Coste fluttuanti a destra: probabilmente incrinate, ma non fratturate, poiché riuscivo a prendere un quarto di respiro senza svenire. Infranto l'arco sopraccigliare, sangue nel dotto lacrimale. Capacità di movimento: limitata.
+Capacità di sopravvivenza: appena ricalcolata e prolungata di almeno ventiquattr'ore.
+
+Avevo appena hackerato un ufficiale dell'intelligence russa senza usare una tastiera.
+
+Il trucco con i burocrati corrotti — di ogni nazione, ma specialmente nella cleptocrazia post-sovietica — è che la loro lealtà alla bandiera è una funzione matematica inversamente proporzionale al guadagno personale. L'uomo dal maglione grigio non era lì per vincere una guerra ideologica per conto di Putin. Era lì perché il bottino di guerra, prima ancora di arrivare ai generali, passa attraverso le mani di chi lo sequestra.
+
+Se gli avessi offerto i codici per sbloccare i trentasette gigabyte, lui li avrebbe passati al comando e si sarebbe preso una lode. Una medaglia, forse una promozione. Ma dicendogli che esisteva *un altro* registro, un database segreto con le coordinate dei fondi immobiliari e offshore di oligarchi russi a Kiev... beh, questo cambiava l'algoritmo. L'uomo dal maglione grigio sapeva benissimo che se avesse ottenuto quell'informazione in esclusiva, avrebbe potuto ricattare i multimiliardari della sua stessa nazione. Avrebbe potuto farsi pagare percentuali mostruose sui loro beni congelati.
+
+L'avidità è un exploit formidabile. È la backdoor definitiva inserita nel codice sorgente della natura umana.
+
+Mentre aspettavo che le guardie tornassero per trascinarmi via, una risata silenziosa e atroce mi scosse il petto, trasformandosi subito in un colpo di tosse bagnato di sangue. Fino a tre giorni prima, disprezzavo la "carne". Credevo che la vera sfida fosse crittografica, algoritmica, pulita. Artem mi aveva costretto ad abbassare lo sguardo nel fango. L'uomo non è un server protetto da firewall logici. L'uomo è un nodo corrotto che aspetta solo di ricevere l'input giusto per tradire le proprie impostazioni di fabbrica.
+
+Caddi in avanti sul linoleum nel preciso istante in cui mi tolsero le cinghie. Non sentii il ginocchio rimbalzare sul duro pavimento metallico. L'unica cosa che sentivo era il ticchettio cerebrale del mio stesso algoritmo. Ero appena passato dall'essere un prigioniero destinato all'eliminazione sommaria all'essere una risorsa numerica da amministrare d'urgenza.
+
+L'avevo mantenuta. Tra il lerciume di una cella russa e il suono dei miei stessi denti rotti, l'avevo mantenuta.
+Prima vivere.
+Il resto era solo codice da decrittare il giorno dopo.
+
+
+Il viaggio verso la "struttura tre" durò pochi minuti, ma per me si tradusse in un limbo di semi-coscienza, trascinato per le ascelle lungo corridoi scarsamente illuminati che risuonavano di stivali militari. L'aria divenne improvvisamente più secca, l'odore di candeggina si mischiò a iodio e alcol etilico.
+
+Mi scaricarono senza cerimonie su un lettino da visita in finta pelle nera, coperto da strappi tenuti insieme con nastro isolante grigio. 
+
+La stanza medica era poco più che uno sgabuzzino illuminato da due neon balbettanti. Un medico militare, o forse solo un infermiere veterano con troppe ore di turno addosso, si avvicinò senza dire una parola. Aveva un grembiule di gomma verde sporco e le sue mani odoravano di tabacco e di disinfettante. 
+
+Non usò anestesia. Prese uno straccio imbevuto di un liquido caustico che mi fece sibilare tra i denti e lo strofinò senza alcuna delicatezza contro il taglio profondo sullo zigomo e l'arcata sopraccigliare. Poi prese un ago ricurvo e del filo di nylon nero.
+
+Ogni volta che l'ago perforava la pelle del viso, l'eco del dolore rimbalzava fino alla base del cranio. Sei punti lenti, tirati con la forza necessaria per chiudere la carne spaccata senza alcuna preoccupazione per l'estetica. Volevano solo che il loro "hard drive umano" smettesse di perdere liquidi.
+
+«Non muoverti, pezzo di letame ucraino,» mormorò il medico la prima e unica volta, quando un tremito involontario mi fece scuotere la testa. 
+
+Il dolore, stavolta, era focalizzato. Chirurgico, in un certo senso. Era diverso dal martellamento contundente del tubo di gomma. Era un dolore che certificava in modo inequivocabile la mia utilità. Se non valessi nulla, non starebbero sprecando nylon e iodio per me. Sarei in una fossa comune coperta di calce viva al di fuori della porta nord.
+
+Artem. Neda. Michael. 
+I nomi fluttuavano nella mia mente, mascherati tra le stringhe del mio PIN mentale. L'equazione di Arkana stava iniziando a prendere vita attraverso i miei linfonodi infiammati e le mie cicatrici, prima ancora che il primo server venisse collegato in Giordania.
+
+Avevo speso anni della mia vita cercando di diventare invulnerabile nascondendomi digitalmente. Credevo che l'invisibilità fosse la forma più alta di sicurezza. Solo adesso, con la carne cucita da un filo nero e la prospettiva di settimane di tortura calcolata davanti a me, capivo il design di Michael.
+
+L'invisibilità è un'illusione tattica. La vera sicurezza risiede nell'indispensabilità. Rendersi troppo incastrati nel meccanismo dell'avversario per poter essere rimossi senza far crollare tutto. 
+Ero stato un fantasma; ora ero una variabile che l'ufficiale russo doveva proteggere dai suoi stessi generali, pur di mettere le mani sui tesori che avevo finto di promettergli.
+
+
+Il viaggio verso est non fu lineare. Nelle trentasei ore successive alla mia sutura clandestina, venni spostato quattro volte. 
+
+Le mie percezioni erano limitate a vibrazioni termico-acustiche e all'odore dell'ambiente di stoccaggio. Venni caricato nel retro di un camion telato Kamaz, il pavimento metallico che trasmetteva ogni buca e ogni sasso della strada direttamente alle mie vertebre e alle mie costole incrinate. Ero incappucciato e ammanettato a un anello di fissaggio, insieme ad altri tre uomini che non conoscevo ma che riconoscevo dal respiro rotto, dal puzzo della paura e dell'incontinenza nervosa. 
+
+Il camion viaggiava di notte per evitare i droni Bayraktar ucraini, procedendo a fari parzialmente schermati. Questa era la verità concreta della guerra: non l'eleganza di un'offensiva tattica mostrata sui monitor satellitari, ma la nausea di un trasporto bestiame su strade secondarie distrutte dai cingoli. 
+
+Ascoltavo la conversazione dei soldati russi di scorta attraverso il telone di canapa. Non parlavano di geopolitica. Parlavano della scarsità di razioni calde MRE, della pioggia gelida che si stava trasformando in nevischio, di come il comando avesse ignorato i problemi logistici al confine per accelerare l'invasione. C'era una disillusione endemica, strisciante. Erano ingranaggi logorati di una macchina troppo grande, mossa dall'inerzia.
+
+E in quella stessa inerzia, il mio valore fluttuava. Ero un pacco postale marcato come "Asset d'Intelligence" da qualche burocrate a Rostov. Se fossi stato un semplice prigioniero politico o un disertore, sarei stato probabilmente scambiato o eliminato nei boschi al primo malfunzionamento del motore. Ma avevo agganciato la loro avidità con la promessa di un file inesistente. Quella menzogna era diventata il mio lasciapassare blindato verso il cuore del sistema di detenzione federale russo.
+
+Al secondo scalo, in uno smistamento ferroviario che odorava di creosoto grezzo e acciaio freddo, venni separato dagli altri. Mi fecero salire su un furgone civile dai vetri oscurati. L'abitacolo sapeva di deodorante per auto al pino e cenere di sigaretta stagnante. L'uomo alla guida non aveva uniformi mimetiche, ma indossava un abito dal taglio anonimo e una pistola Tokarev infilata nella cintura. I professionisti dell'FSB stavano prendendo in consegna il prigioniero.
+
+
+
+Quando finalmente mi tolsero il cappuccio, l'aria condizionata della stanza mi asciugò istantaneamente il sudore sulla fronte. Ero in una struttura completamente diversa. Niente candeggina industriale. Niente pareti sbrecciate. C'erano pannelli fonoassorbenti alle pareti e un neon freddo, bianco, che non sfarfallava mai. Era un centro d'interrogatorio federale, probabilmente a Rostov sul Don o in profondità in un distretto militare vicino al confine orientale.
+
+Un uomo anziano, dai lineamenti affilati e gli occhi grigi come ghisa, sedeva dietro un tavolo in acciaio inox. Aveva sulla scrivania l'involucro di plastica trasparente con i miei due SSD estirpati dal giubbotto.
+
+«Andriy,» esordì, senza alzare il tono di voce. Era un tono baritonale, caldo, quasi affettuoso. «Hanno fatto un lavoro rude sul tuo zigomo. Manca del tutto di eleganza chirurgica.»
+
+Non risposi. Il dolore alle costole era diventato una presenza fissa, un compagno di stanza silenzioso. 
+
+«Il maggiore, quello che ti ha prelevato all'inizio del transito,» continuò il vecchio, incrociando le mani nodose. «Mi ha informato che detieni una chiave d'accesso mnemonica per sbloccare l'SSD.» Batté un dito unghiuto sulla plastica. «Un registro immobiliare dei nostri oligarchi. Denaro investito in Ucraina in modo obliquo per decenni. Una polizza assicurativa che volevano nascondere.»
+
+Deglutii. Questa era la fase critica della menzogna: se scopriva che il registro non esisteva e che l'SSD conteneva un Dead Man's Switch, ero morto. 
+«Sì,» risposi.
+
+«Mentire e' umano, ragazzo mio. È il modo in cui ci proteggiamo. Ma tu non stai scappando da un fosso moscovita. Tu odi il tuo paese, oppure odi il sistema. Vuoi svergognarli o vuoi farti pagare?»
+«Voglio non prendere altre botte sui reni,» dissi, la voce secca come carta vetrata. «E voglio che rispettiate le condizioni. Mi tirerete fuori quando vi sbloccherò tutto.»
+
+L'ufficiale anziano sorrise. Era un sorriso che non interessava gli occhi. «Noi sappiamo già che i metadati del disco dicono che è un file container unico. Se inserisci il codice, potremmo sbloccare la distruzione dei file o un ping automatico. L'intelligence occidentale ha usato trick del genere per anni in Cecenia.»
+
+Mi pietrificai dentro, ma all'esterno mantenni il respiro piatto. L'unica debolezza dell'FSB è credere che l'avversario operi sempre secondo le stesse metriche classiche di lealtà patriottica e contro-spionaggio convenzionale. Loro non potevano concepire l'esistenza di Arkana come entità del tutto terza. Pensavano che i trentasette gigabyte, così come la mia chiave, fossero un'esca creata dai servizi segreti israeliani, americani, londinesi, o persino dalla Direzione Principale dell'Intelligence ucraina.
+
+«Provate, allora.» Lo sfidai. Usai il tono di chi ha imparato l'arte dell'insolenza sotto tortura, ma senza aggredire troppo. «Provate ad attaccare il kernel crittografico. Vediamo quanto tempo ci mettete a capire che se non sono io a battere i tasti secondo la sequenza ritmica, i dati friggeranno fisicamente i platters logici.»
+
+Il silenzio nella stanza durò venti secondi. Venti battiti del mio cuore asincrono, irregolare per le contusioni toraciche.
+
+Lui si appoggiò allo schienale. Sapeva che io sapevo. Sapevo che l'avidità del loro sistema, il terrore di perdere l'unica mappa capace di identificare i traditori finanziari russi a Kiev, gli proibiva di formattare o forzare l'hardware in modo sconsiderato. L'incertezza li aveva paralizzati: il mio corpo malridotto, le mie bugie, l'SSD muto.
+
+E lì sotto, in terra russa, schiacciato dall'imponenza di una struttura staliniana di sottomissione psichica, ricalibrai la mia direttiva. L'obiettivo non era uscirne eroe. Non era fuggire domani. Era incancrenirmi nel loro sistema amministrativo. Diventare un prigioniero di "Alto Valore Non Identificato", intrappolato in un loop logico perfetto in cui loro avevano bisogno di tenermi in vita per non distruggere i dati, e io avevo bisogno dell'ostaggio (il mio Dead Man's Switch) perché Loro mi tenessero confinato senza procedere al plotone di esecuzione.
+
+Diventai l'anomalia. L'errore nel registro dell'FSB.
+Questa era la *Promessa* che avevo fatto ad Artem nel caffè, tra il rumore dell'espresso e le briciole di torta. 
+
+Prima vivi. Sopravvivi a ogni costo. Abbassati, diventa un topo, diventa letame, sanguina se necessario. Ma non farti eliminare. Costituisci un archivio latente che, al momento opportuno, quando Arkana sarà illuminata del tutto nel Mediterraneo, rilascerà il veleno all'interno delle loro vene. 
+
+Fui riportato in una cella di quattro metri quadrati in cemento lucido. Una branda di ferro sottile. Niente finestre. Un secchio al buio. Ma quando la porta insonorizzata si chiuse alle mie spalle, producendo quel click ermetico che significava l'inizio dell'oblio, paradossalmente io m'illuminai.
+Stavo operando. Ero completamente attivo all'interno della rete infetta del nemico. Stava solo a me decodificare il prossimo decennio d'infiltrazione.
+
+
+
+Non c'erano luci di sicurezza, non c'erano finestre sbarrate da cui scrutare il cielo russo. Il buio aveva uno spessore proprio, quasi tangibile. Respirai lentamente, assaporando il sapore metallico del mio stesso sangue misto a iodio. Ero la scatola nera di un disastro in corso, e mentre il mondo fuori bruciava, io mi spegnevo tranquillamente nell'oscurità perfetta, calcolando i cicli della mia sopravvivenza procedurale fino all'inevitabile collasso del loro impero corrotto.

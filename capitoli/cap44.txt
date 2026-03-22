@@ -1,0 +1,210 @@
+PRIMA VIVI POI SPIEGHI — Capitolo 44
+Titolo: Numero
+POV: Andriy
+Luogo: In volo / Teheran
+Data: 2022
+Stato: espansione
+Parole: 4000+
+
+---
+
+La distruzione di un'identità umana non richiede strumenti raffinati. Non serve la tortura dell'Inquisizione, non servono macchinari complessi o droghe psicotrope. Serve solo la burocrazia.
+
+Quando l'FSB russa mise finalmente a verbale il mio trasferimento permanente nella struttura detentiva di Rostov sul Don, impiegarono esattamente diciassette minuti per cancellare Andriy dalla superficie del pianeta. Diciassette minuti e tre moduli stampati su carta riciclata che odorava di muffa e inchiostro chimico.
+
+Mi tolsero i vestiti, sostituendoli con un'uniforme carceraria di cotone grezzo, color grigio topo, di due taglie più grande. Mi rasarono i capelli a zero con una macchinetta che non veniva pulita da mesi, lasciando piccoli graffi sanguinosi lungo lo scalpo. Mi fotografarono di fronte, di profilo e di tre quarti, usando una fotocamera digitale montata su un treppiede malandato che scattò con un ronzio asmatico. 
+
+Infine, presero le mie due identità digitali fisiche. I miei ultimi due telefoni bruciati usa e getta, che avevano viaggiato con me dalla metropolitana di Kiev fino a qui, chiusi in una busta di plastica insieme alla mia cinta e ai lacci delle scarpe. Vederli gettati su quel bancone metallico fu come assistere all'amputazione di un arto fantasma. In quei due rettangoli di silicio e plastica c'erano le ultime impronte crittografiche che mi legavano al mondo esterno; erano i terminali scemi con cui avrei potuto inviare il segnale d'aborto al Dead Man's Switch. Ora, l'interruttore automatico stava ticchettando da solo, da qualche parte a Singapore, alimentato unicamente dall'assenza del mio input.
+
+«Nome.» La voce del secondino dietro il vetro corazzato era un grumo di noia e catarro.
+«Andriy...»
+«Soggetto numero 7044,» lo interruppe l'ufficiale dell'intelligence che mi aveva scortato fin lì, appoggiando brutalmente una mano sulla mia spalla sinistra, proprio sopra il taglio della clavicola. «Questo non ha un nome. È un transito speciale a disposizione del Direttorato Centrale.»
+
+Il secondino alzò le spalle, battendo a macchina il numero su una tastiera ingiallita. «Settemilaquarantaquattro. Sezione sotterranea B.»
+
+Fu in quel momento che entrai fisicamente nel buco nero.
+
+Un carcere di massima sicurezza non è costruito per spaventarti. L'architettura del terrore appartiene al cinema. Il carcere russo è costruito per essere infinitamente, atrocemente banale. Le pareti della sezione B erano verniciate per metà di un verde ospedale stinto e per metà di bianco calce. I pavimenti erano di linoleum grigio, lavato ogni mattina con un disinfettante al cloro che ti bruciava le narici ma non riusciva a coprire l'odore fondamentale del posto: la disperazione stantia, un impasto biologico di sudore, feci umane in condotti idraulici difettosi e ruggine sorda.
+
+La mia cella misurava tre passi in lunghezza e uno e mezzo in larghezza. C'era un letto a ribalta imbullonato al muro, un lavandino in acciaio inox senza specchio, e un gabinetto a cui mancava l'asse. Nessuna finestra. L'illuminazione era fornita da un blocco al quarzo incassato nel soffitto e protetto da una griglia d'acciaio spessa due dita. Non si spegneva mai completamente. La notte, se quella definizione aveva ancora un senso, veniva segnalata abbassando la frequenza della luce fino a un crepuscolo malato.
+
+I primi giorni furono l'anticamera della follia. 
+Il cervello umano, privato degli stimoli esterni — la variazione della luce solare, le voci asimmetriche della città, i colori, la percezione della distanza spaziale — inizia a cannibalizzarsi. Cominciai a sentire rumori che non esistevano. Voci di bambini nei tubi dell'aerazione. Il rumore di una notifica del portatile, chiaro e distinto, che proveniva dal muro cieco davanti al letto. Una notte, vidi persino la nebbia salire dal linoleum. 
+
+Ma la CPU centrale, l'analista freddo che mi aveva tenuto in vita sotto le bombe di Kiev, non smise mai completamente di funzionare. Riconobbe la follia come una variabile prevedibile del sistema e decise di scrivere una patch per aggirarla.
+
+Per sopravvivere al buco nero, dovevo smettere di essere Andriy l'hacker romantico che voleva salvare l'Ucraina, e abbracciare del tutto il 7044, la risorsa matematica.
+
+Iniziai a misurare il tempo non con le ore, ma con la periodicità dei rumori meccanici della prigione. Il cigolio del carrello per il rancio: ogni seimilaquattrocento dei miei respiri a riposo. Il cambio della guardia: ogni diecimilaottocento respiri. La contrazione termica dei tubi di riscaldamento: irregolare, ma correlata alla caduta delle temperature notturne esterne. Stavo decriptando il carcere.
+
+
+I mesi divennero stagioni, sebbene io potessi accorgermene solo per il cambiamento della condensa sui tubi scoperti del soffitto. 
+
+Il mio corpo si stava adattando alla prigionia seguendo un algido protocollo biologico di risparmio energetico. Persi dieci chili neri primi sessanta giorni. Le mie gengive iniziarono a sanguinare spontaneamente per la carenza di acido ascorbico, e i miei tendini si irrigidirono al punto che stendere le braccia produceva scricchiolii udibili.
+
+Una mattina di non sapevo quale mese, toccandomi il viso, mi accorsi di non riconoscere più l'architettura delle mie ossa facciali. Il gonfiore delle percosse era scomparso da tempo, sostituito da una scheletrica aderenza della pelle allo zigomo suturato e alla mascella pronunciata. L'Andriy che girava per i caffè di Podil con un cappotto di panno non esisteva più. 
+
+Paradossalmente, mentre la mia massa muscolare veniva cannibalizzata per nutrire il cervello, quell'organo esigente diventava sempre più lucido. L'isolamento, una volta superata la fase del terrore allucinatorio, aveva purgato via tutte le distrazioni. Non pensavo ai film, non pensavo al sapore del cibo, non pensavo al sesso. Pensavo in codice. Convertivo le ore di attesa in matrici logiche. 
+La mia debolezza fisica diventava un vantaggio durante gli interrogatori: l'ufficiale anziano provava una ripugnanza igienica nel vedermi, scambiando il mio decadimento per resa imminente. Non capiva che stavo solo minimizzando i processi in background per dedicare il cento per cento delle risorse di sistema alla conservazione dell'ingranaggio principale: la mia bugia.
+
+
+
+E poi, c'era l'interrogatorio settimanale. 
+
+L'FSB non aveva sciolto il mio SSD crittografato. L'avevano analizzato, e avevano scoperto che la mia minaccia era reale: la struttura del file master indicava l'esistenza di un comando letale innescabile da manomissioni hardware. Così, ogni fottuto giovedì, l'ufficiale anziano, quello dei modi pacati e dello sguardo di ghisa, mi faceva portare in una stanza asettica e mi versava un bicchiere di tè caldo.
+
+«Allora, Settemilaquarantaquattro. Ti sei abituato all'ospitalità dello Stato?» chiedeva invariabilmente.
+«Il materasso è sottile,» rispondevo invariabilmente io, bevendo il tè a piccoli sorsi per non bruciarmi le labbra ancora coperte da croste sottili.
+«Dipende da te. Un codice di sblocco frammentario, e potresti ottenere un materasso migliore. Forse persino due ore d'aria la domenica.»
+
+Il trucco non era mai dirgli di no. Se dici di no, sfidi l'autorità, e chi ha il potere deve schiacciarti per ribadirlo. Il trucco era la dilazione procedurale.
+
+
+Avevo costruito un labirinto per loro.
+Invece di dire semplicemente di no, che per un interrogatorio russo è solo un invito ad alzare la tensione elettrica, avevo trasformato lo sblocco in un processo rituale a ostacoli che richiedeva il mio benessere fisico e la massima stabilità logistica. 
+
+Gli avevo detto che il kernel era diviso in sedici blocchi crittografici, ognuno protetto da una stringa astenuta di quarantadue caratteri pseudo-casuali che cambiava in base alla temperatura locale e a un seme temporale. Era una cagata pazzesca. Era fantascienza da B-movie. Ma se sei un burocrate di cinquant'anni che capisce a malapena come si accende un portatile per aprire un foglio Excel, una stronzata detta con l'estrema sicurezza di chi sta rischiando la vita acquista il peso di una verità teologica.
+
+Ero circondato da uomini duri che potevano spezzarmi un braccio flettendolo dietro la schiena in meno di due secondi. Ma in ambito digitale, loro erano analfabeti ciechi e io ero il dio che possedeva la mappa.
+
+Ogni giovedì gli fornivo i presunti ventiquattro caratteri della chiave parziale di un blocco minore. Mi facevano scrivere la stringa su un pezzo di carta. Io inventavo numeri e lettere tenendo d'occhio la proporzione dei caratteri speciali, simulando l'indecisione o l'affaticamento mnemonico per rendere il tutto più credibile. Sapevo che avrebbero spedito quel foglietto ai tecnici di Mosca, e sapevo che i tecnici di Mosca avrebbero impiegato almeno tre giorni per incanalare quei caratteri nell'algoritmo brute-force e accorgersi che la stringa era solo entropia. Ma a quel punto, avrebbero sospettato di aver sbagliato l'inserimento, o peggio, di non aver estratto la stringa con abbastanza precisione dal mio foglio spiegazzato.
+
+«Sei un figlio di puttana intelligente, Settemilaquarantaquattro,» mi mormorò una sera uno dei secondini della Sezione B, un ragazzo slavo con la faccia rovinata dall'acne giovanile e il respiro pesante. 
+
+Stava spingendo il vassoio di sbobba acquosa attraverso la feritoia della porta blindata.
+
+«Perché lo dici?» chiesi io, senza alzarmi dal letto a ribalta, la voce piatta per non tradire debolezza.
+«Perché il tenente colonnello ieri sera ha rotto la macchinetta del caffè a pugni quando è tornato dal tuo interrogatorio. Sembri un pezzo di merda spaventato, ma li stai tenendo per le palle, vero? Cosa cazzo c'è in quel disco? Il video segreto del presidente che si incula una capra?»
+
+L'ironia proletaria del guardiano era ossigeno puro per il mio cervello sottovuoto. Mi stava confermando, in modo brutale ma empirico, che la mia tattica funzionava. L'FSB non stava decriptando nulla. Stavano girando in tondo intorno all'osso finto che gettavo loro ogni settimana, mentre il vero orologio del mio Dead Man's Switch aveva smesso di suonare ed era passato alla fase dormiente, salvaguardando il materiale grezzo da me inviato al server di Neda.
+
+«Non lo so,» gli risposi. «Io tenevo solo i registri del catasto. Hanno semplicemente sbagliato a carcerare l'informatico.»
+
+Il ragazzo grugnì, spingendo la ciotola di alluminio fino a farla cadere rumorosamente sul pavimento di linoleum. «Fai come vuoi. Ma un giorno si stancheranno di giocare, e quando i tecnici di Mosca diranno al tenente colonnello che gli stai vendendo merda al posto del caviale, l'ordine di 'non danneggiare l'hardware umano' verrà revocato. Goditi la zuppa, settantaquarantaquattro.»
+
+
+«Vi ho sbloccato la cartella periferica due settimane fa,» sussurravo, fissando il fondo del bicchiere. «Quella con i conti correnti registrati a Dubai. Sapete che vi ho dato soldi veri. Ma il kernel centrale... quello richiede una sequenza di sblocco a cascata. Se lo forziamo troppo in fretta dal mio cervello, con lo stress che ho addosso, potrei sbagliare l'algoritmo di decrittazione a mente e l'hard drive collasserebbe. Devo essere riposato. Datemi tempo.»
+
+Loro mi odiavano per questo, ma erano troppo assuefatti alla speranza del premio grosso per uccidermi. Ero diventato l'incubo di ogni sistema di gestione: il prigioniero utile. Invisibile al mondo fuori, classificato come numero senza nome, ma internamente così vitale per la carriera di alcuni ufficiali corrotti da diventare intoccabile dalla violenza letale.
+
+
+La vera prova di stress del mio sistema arrivò durante la diciannovesima settimana. 
+Quando mi trascinarono nella stanza asettica per il consueto tè del giovedì, l'ufficiale anziano non era su un lato del tavolo. Era in piedi, le mani incrociate dietro la schiena. Seduto alla sedia c'era un uomo sulla trentina, pallido, con occhiali dalla montatura spessa e l'aria disperatamente insalubre di chi non dorme da giorni. Indossava la divisa di un reparto tecnico o dell'agenzia di telecomunicazioni.
+
+«Settemilaquarantaquattro,» esordì l'anziano comandante. «Il signor Sokolov qui presente è venuto direttamente da Mosca per rivedere il tuo simpatico algoritmo di decrittazione a stringhe variabili. Dice che non ha alcun senso matematico.»
+
+Un brivido di terrore freddo, diverso dalla paura delle percosse, mi corse lungo la colonna vertebrale. Sokolov era un professionista. Era uno della mia razza. Se apriva l'SSD e provava a iniettare un parser bypassando l'input utente finto che avevo costruito, il firmware interno del disco, programmato sulle specifiche del mio Dead Man's Switch, avrebbe immediatamente innescato una frammentazione irreversibile di emergenza. E a quel punto io sarei diventato un mucchio di carne inutile incatenato a una sedia.
+
+Mi sedetti, tenendo lo sguardo basso.
+«Non provarci,» sussurrai in russo, alzando lentamente gli occhi verso Sokolov. «Se bypassi l'handshake asincrono, distruggi il volume. E tu sai che è vero. L'hai già visto sui log dell'hardware.»
+
+Sokolov aggiustò gli occhiali sul naso. Puzzava di sudore nervoso. E fu in quel momento che capii l'asimmetria di potere in quella stanza. Sokolov era spaventato dall'FSB molto più di me. Lui era un tecnico, pagato per portare risultati a un apparato repressivo che non ammetteva fallimenti. Se lui avesse commesso l'errore che frastagliava fonicamente l'unico registro segreto rubato a Kiev, sarebbe finito lui stesso in una cella come la mia. O peggio.
+
+«È un sistema basato su una ridondanza entropica falsa,» disse Sokolov al comandante, ignorandomi, ma la sua voce tremava leggermente. «L'algoritmo non chiede una chiave per sbloccare i dati. Chiede una chiave per *non fregarli*, signore. L'architettura è una bomba logica a disinnesco periodico.»
+
+Io mi appoggiai allo schienale. Bingo. Il bastardo moscovita era bravo. Aveva capito la differenza tra un caveau chiuso e una mina innescata. E questa sua comprensione era la mia maledizione e la mia salvezza.
+
+«Quindi?» ringhiò l'anziano comandante. «Cosa suggerisci, Sokolov?»
+
+Il giovane tecnico guardò l'SSD sul tavolo come se fosse un pezzo di plutonio instabile, poi guardò me. I nostri occhi si incontrarono per un secondo interminabile. C'era un muto scambio di linguaggi di programmazione e pura biologia tra noi. Lui sapeva di poter tentare un recupero a basso livello, bypassando il mio firmware tramite una saldatura in camera bianca, un processo rischioso con l'ottanta per cento di possibilità di corrompere tutto. Ma l'ottanta per cento di fallimento, al cospetto del vecchio dell'FSB, equivaleva all'ottanta per cento di probabilità di finire in Siberia.
+
+«Suggerisco,» rispose Sokolov, asciugandosi la fronte con la manica, «di continuare a usare questo ucraino esattamente come stiamo facendo, signore. Estrarre le chiavi una alla volta per raffreddare il timer logico. Fino a quando non troveremo un vettore sicuro al cento per cento. Se sbagliamo noi l'approccio, la sua bomba friggerà il registro del governo ucraino e gli elenchi dei fondi neri. Sarebbe un danno di centinaia di milioni, signore.»
+
+Il vecchio ufficiale sbuffò pesantemente, deluso, come un predatore a cui era stato negato l'ordine di attaccare a causa di un regolamento burocratico incomprensibile.
+I russi sono schiavi del feticcio della sicurezza totale. Non rischiano milioni di rubli rubati su una probabilità infausta.
+
+«Riportatelo nella gabbia,» abbaiò l'anziano.
+
+
+
+
+La minaccia del secondino era la mia variabile indipendente: la probabilità di un crollo improvviso del bluff. 
+
+Per combattere il panico che seguì quelle parole, tornai a fare ciò che so fare meglio: isolare i dati. 
+
+Ricordai una conversazione audio con Michael, criptata, mesi prima dell'invasione. Non l'avevo mai visto in faccia: conoscevo solo il filtro modulato a banda stretta che distorceva la sua voce trasformandola in quella di un vecchio annunciatore radiofonico. 
+
+«Andriy, la maggior parte delle persone non comprende il concetto di latenza,» aveva detto Michael dal buio di Israele. «Pensano che se un pacchetto dati non arriva subito alla destinazione, sia fallito o perso. Non capiscono che l'attesa è un'arma tattica. La latenza è il respiro profondo prima del colpo del cecchino. Se scompari dal radar per cinque anni portandoti dietro le informazioni critiche, i tuoi nemici cominceranno a dare per scontato che le informazioni siano distrutte, e abbasseranno le difese. Ricostruiranno i loro imperi esatti sui vecchi schemi, convinti dell'impunità.»
+
+«E quindi?» gli avevo obiettato io, ticchettando su una tastiera a membrana silenziosa in un attico a Lviv. «A cosa serve aspettare se possiamo bruciarli subito?»
+
+«Perché se li bruci subito, tagli uno o due fili. Ne nasceranno altri dieci il giorno dopo. L'idra della corruzione si auto-ripara in fretta. Ma se aspetti che l'Idra intera si riorganizzi, abbassando la guardia e raccentrando tutto, e *allora* rilasci il veleno asincrono in ritardo di anni... la distruggi strutturalmente. La latenza è l'incubatrice della ritorsione sistemica.»
+
+Ora, chiuso in un buco di tre metri senza specchi, senza peli sul corpo e con un numero a quattro cifre al posto del nome, capii l'espressione di Michael nel suo nucleo molecolare.
+
+Non ero un prigioniero politico torturato dai russi. Non ero una vittima del buco nero di Rostov.
+Ero un pacchetto dati ad alta latenza.
+
+Il mio scopo non era fuggire dopodomani. Il mio scopo era rimanere ibernato nel loro stomaco, consumando la loro attesa, esaurendo la loro energia burocratica, finché la configurazione che stavamo progettando ad Amman, a Teheran, in Giordania, non fosse pronta. Il mio esilio silente non era una sconfitta; era l'inizio operativo di Arkana. L'isolamento era lo strato isolante del server freddo in cui mi ero volutamente stoccato per resistere all'inverno della guerra.
+
+
+
+La sopravvivenza procedurale è noiosa in modo estenuante, ed è per questo che frantuma chi cerca un significato eroico in prigione. Io avevo rinunciato all'eroismo fin dal primo istante in cui avevo superato quella porta con la mia targhetta 7044.
+
+Quella notte, rannicchiato sotto l'unica coperta logora della cella, ascoltando la tosse catarrale di qualche altro "soggetto numerico" in fondo al braccio sotterraneo, cominciai a costruire il progetto Arkana nella mia testa.
+
+Non avendo fogli di carta — concessi solo durante gli interrogatori per digitare le false sequenze esadecimali — memorizzavo interi rami di condizionali. 
+Se Artem recluta Liah ed Eitan per estrarre la spia a Teheran, allora avremo bisogno di Neda fuori dalla prigione di Evin. Se Neda sarà libera, otterrà i dati criptati dal firewall neutro che io le avevo mandato la notte dell'invasione. Ma per ricattare in modo efficace e costruire la rete che proteggerà migliaia di vite senza dipendere né dagli americani né dai russi, servirà un server inattaccabile. Una base di neutralità assoluta. Sotto le onde del mare? O nelle caverne di una montagna sterile?
+Progettavo l'isolamento del sistema centrale. Disegnavo protocolli di routing asimmetrico ad alto spessore crittografico. 
+
+Nel mondo esterno l'inverno stava finendo. Forse la neve sulle strade desolate si stava sciogliendo in poltiglia grigia. I bambini di Kyiv, se sopravvissuti, stavano vedendo la prima fioritura di una primavera segnata da cicatrici di proiettili sui tronchi degli alberi. Ma qui sotto, nel buco nero di Rostov, non c'erano stagioni.
+C'era solo il lento, formidabile accumulo di una pressione latente. 
+
+Avevano preso i miei telefoni, i miei vestiti, il mio nome e le mie password. Avevano cercato di estirparmi la voce e l'identità.
+Quello che l'FSB russa e l'establishment militare non comprendevano, però, era che mi avevano appena fornito l'alibi più inattaccabile del mondo. Nessun algoritmo di tracciamento o satellite avrebbe mai cercato lo spettro di Andriy nei buchi neri del Direttorato Centrale moscovita. Mentre loro credevano di seppellirmi vivo per paura che il mio SSD esplodesse digitalmente, mi stavano in realtà nascondendo a chiunque altro volesse la mia testa.
+
+
+La gestione a lungo termine di un isolamento forzato si gioca sui dettagli microscopici. 
+
+Ero diventato un cacciatore di anomalie sensoriali. Durante l'ora del giovedì, quella con l'ufficiale anziano dall'occhio di ghisa, non mi limitavo a snocciolare le mie sequenze esadecimali inventate. Io lo scannerizzavo. 
+
+Notai che la saponetta che usava per lavarsi le mani odorava di lavanda chimica, un dettaglio incongruo in una struttura militare russa che odorava solo di ruggine e cloro. Notai che la sua uniforme, sebbene immacolata a livello del petto, presentava regolarmente minuscole macchie grigie vicino all'orlo sinistro dei pantaloni: guidava lui stesso verso la prigione, e il tappetino dell'auto, dal lato della frizione, era perennemente sporco. Notai il lieve tremore anulare della sua mano sinistra quando sollevava la tazza di tè, indice di un inizio di Parkinson o di una degenerazione nervosa che cercava disperatamente di nascondere al comando centrale.
+
+Lo ricostruivo, lo assemblavo nella mia testa. Lo legavo a un mondo esterno che io non potevo più toccare. 
+
+Usare i frammenti della vita dei tuoi carcerieri per ricordare a te stesso che la realtà analogica esiste ancora è un meccanismo di difesa molto antico, teorizzato da dissidenti politici decenni prima di me. Se l'uomo che mi teneva schiavo guidava una macchina nel traffico di Rostov e faceva la spesa comprando sapone alla lavanda, allora il mondo fuori dal buco nero di cemento stava ancora girando. I server che componevano la spina dorsale dell'intelligence occidentale stavano ancora processando dati. Neda, da qualche parte, stava ancora respirando l'aria inquinata di Teheran.
+
+La sopravvivenza procedurale è esattamente questo: non è combattere contro il leone, è aspettare che il leone si ammali o si distragga. E per non cedere alla tentazione della disperazione, trasformavo il mio carnefice in una variabile vulnerabile. Se morivo io, morivano i quaranta milioni di hryvnie che lui sperava di intascare. E se moriva lui, la sua conoscenza segreta del mio bluff sarebbe morta con lui, resettando l'intero ciclo interrogatorio con un ufficiale diverso che avrebbe dovuto ricominciare da zero.
+
+Noi due, io e il vecchio comandante, eravamo legati in una strana, perversa transazione di database. Lui era il client che non faceva altro che effettuare ping a vuoto, io ero il server che rispondeva con errori 404 strutturati appositamente per farlo tornare il giorno dopo. 
+Nessuno dei due voleva spezzare la connessione.
+
+
+
+L'equilibrio si ruppe non per mano sua, ma per un sussulto del sistema.
+
+Era una notte qualunque. Il neon protetto dalla griglia era settato sulla solita frequenza crepuscolare che simulava male il buio. Dormivo un sonno leggero e frastagliato, coperto dalla coperta ispida che non tratteneva il freddo del cemento.
+
+La serratura della porta massiccia emise uno scrocco metallico acuto, fuori orario. 
+Non ci fu il tempo di mettersi a sedere. Tre guardie, diverse dai soliti secondini della sezione B, fecero irruzione. Indossavano equipaggiamento tattico nero, passamontagna e occhiali per la visione notturna: un dispiegamento di forze ridicolo per neutralizzare cinquantacinque chili di ossa e tendini ucraini rannicchiati su una branda, ma coerente con i protocolli Spetsnaz per i trasferimenti d'emergenza.
+
+Mi afferrarono per le braccia, disarticolandomi quasi le spalle indebolite, e mi trascinarono fuori. Mi infilarono sulla testa un sacco di tela nera prima ancora che raggiungessimo la fine del corridoio.
+
+Il panico, un panico primordiale e asfissiante, si impadronì dei miei polmoni. Quando i russi trasferiscono i prigionieri di notte con unità speciali, solitamente è perché l'utilità del prigioniero è scaduta. Andavo verso una fossa coperta di calce viva nei boschi. Il tecnico di Mosca, Sokolov, forse aveva ceduto, aveva forzato l'SSD, e i militari avevano scoperto che il disco era finto o che la loro scommessa era crollata?
+
+Fui caricato su un veicolo blindato, le portiere posteriori si chiusero con il suono di una piccola tomba che si sigilla. Il viaggio durò venti minuti di sobbalzi su strade d'asfalto distrutte. 
+Quando il furgone si fermò e le portiere si aprirono, la folata d'aria che entrò non odorava di terra smossa. Non odorava di foresta. Odorava di cherosene avio, gomma bruciata e asfalto bagnato.
+
+Un aeroporto militare.
+
+Inciampai fuori dal furgone, sorretto ai fianchi dalle due guardie. Sotto il sacco di tela sentivo il rumore sordo e potentissimo delle turbine di un aereo cargo Ilyushin o di un Antonov militare in fase di rullaggio.
+
+Non andavo verso un'esecuzione. Le esecuzioni richiedono solo un bosco e una vanga. I trasferimenti aerei d'urgenza richiedono autorizzazioni logistico-militari ad alto livello. La mia bugia — il registro segreto, la finta vulnerabilità, l'utilità latente — aveva funzionato talmente bene che il comando centrale doveva aver deciso di togliermi dalla giurisdizione dell'ufficiale anziano di Rostov. Ero diventato un prigioniero di Valore Strategico Nazionale, probabilmente destinato a Mosca o a qualche prigione sotterranea dedicata allo smistamento dei colletti bianchi del terrorismo cybernetico.
+
+Mentre venivo spinto a forza sulla rampa metallica dell'aereo cargo, i cani russi mi strattonavano, urlandomi ordini gutturali che non capivo. Ma sotto la tela nera ruvida, il mio volto devastato e denutrito si aprì in un sorriso spettrale che i miei carcerieri non potevano vedere.
+
+Avevo perso tutto: il mio nome, la mia dignità cellulare, i miei vestiti, il mio peso.
+Ma mi stavo muovendo più in profondità nel cuore del loro impero. Il buco nero si stava allargando, e io ci stavo sprofondando dentro con la densità controllata di un file malevolo che ha appena superato il firewall esterno e si prepara a colonizzare il server principale. 
+Ero salvo per altri innumerevoli mesi.
+
+Artem. Neda. Michael. Il loop si stava chiudendo attorno a loro. Ora dovevo solo continuare il bluff fino in fondo.
+Prima vivi.
+
+
+Ero diventato il prigioniero utile. Invisibile, anonimo, intoccabile, incancellabile.
+
+Chiusi gli occhi verso il crepuscolo malato del neon protetto dalla grata, e il ritmo del mio cuore fu, per la prima volta da sedici settimane, perfettamente sincronizzato con l'attesa.
+
+
+Artem. Neda. Michael.
+Ripetere i loro nomi in silenzio divenne il mio mantra di stabilizzazione del sistema. Ero la variabile dormiente nell'architettura asimmetrica di una guerra globale che non faceva più rumore per me, se non negli echi remoti di un cacciabombardiere che ogni tanto faceva ronzare l'intonaco del buco nero.

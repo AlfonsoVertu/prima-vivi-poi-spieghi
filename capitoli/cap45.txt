@@ -1,0 +1,229 @@
+PRIMA VIVI POI SPIEGHI — Capitolo 45
+Titolo: La stanza
+POV: Neda
+Luogo: Prigione di Evin, Teheran
+Data: 2023
+Stato: espansione
+Parole: 4000+
+
+---
+
+La prigione di Evin, incastonata come un dente infetto alle pendici dei monti Alborz, non ha bisogno di architetture brutaliste per piegare la volontà. Usa la geografia e il microclima. 
+
+D'estate, il caldo ristagna nei corridoi ristretti, impregnato dell'odore acido del sudore di migliaia di corpi malnutriti e della polvere rossastra che filtra dalle prese d'aria sprovviste di filtri adeguati. D'inverno, il freddo scende dai monti e si insinua attraverso il cemento poroso, congelando la condensa sui muri delle celle di isolamento del braccio 209, quello gestito dal Ministero dell'Intelligence.
+
+Ero lì dentro da non so quanti mesi.
+La mia cella misurava tre passi in lunghezza e due e mezzo in larghezza. A differenza delle celle dei prigionieri comuni, noi donne considerate minacce per la sicurezza nazionale godevamo del privilegio perverso dell'isolamento totale. Niente compagne con cui dividere uno sguardo, niente voci nel cuore della notte. Solo un tappeto persiano logoro macchiato di umidità, un minuscolo lavandino nell'angolo, e una turca nascosta dietro un muretto alto meno di un metro. 
+
+Non mi permettevano di tenere i miei vestiti occidentali. Mi avevano costretta a indossare un rudimentale chador grigio scuro, ruvido sulla pelle. Non c'erano specchi da nessuna parte. Questa è una tattica specifica dell'interrogatorio per donne nel sistema iraniano: toglierti l'accesso alla tua stessa immagine corporea. Lentamente, dimentichi il colore esatto dei tuoi occhi, la forma del tuo viso. Scompari. Diventi esattamente quello che loro vogliono che tu sia: un fantasma sottomesso.
+
+Ero abituata a esistere attraverso proxy, macchine virtuali e routing onion. Su server situati a migliaia di chilometri di distanza, potevo essere chiunque: un amministratore di database, un hacker maschio bielorusso, un ragazzino in un seminterrato dell'Ohio. Ma qui, la fisicità era tornata a reclamare i suoi diritti. Il mio corpo era un bersaglio, e la mia identità era rigidamente definita dai carcerieri in base a quello che rappresentavo per loro: una traditrice apostata.
+
+
+Non avere uno specchio significa perdere il baricentro visivo della propria esistenza. Dopo sei mesi in quella cella, il mio viso era diventato un concetto astratto, una mappa che non potevo più consultare. Toccavo i miei zigomi e mi sembravano più spigolosi. Passavo le mani sui capelli, che prima dell'arresto avevano riflessi castani sotto il sole, e ora li sentivo unti, opachi e fragili, nascosti eternamente sotto il chador anche quando ero sola.
+
+Il silenzio del braccio 209 non era un'assenza di suono, ma una presenza opprimente. 
+Per non impazzire, decisi di trasformare quel vuoto acustico in un terminale. Chiudevo gli occhi e immaginavo un terminale Linux aperto sul nero pece della mia cecità volontaria. Iniziavo a riprodurre mentalmente i rumori delle vecchie compilazioni del codice. Il *clack-clack* secco della mia tastiera meccanica a casa. Il ronzio della ventola del processore quando un ciclo condizionale complesso richiedeva troppe risorse. 
+*While(True): Breathe();*
+
+Questo loop auto-indotto mi teneva ancorata alla logica. I miei aguzzini credevano che l'isolamento avrebbe distrutto il mio sistema di credenze. Non capivano che per un programmatore di reti asimmetriche, l'isolamento è l'ambiente di sviluppo naturale. Eravamo nati nell'ombra, abituati a comunicare senza volti, fidandoci solo della rigidità matematica delle chiavi PGP.
+
+A volta, l'allucinazione uditiva si fondeva con la realtà. Sentivo passi nel corridoio e la mia mente li trasformava in ping di latenza. Un passo, 12 millisecondi. Due passi, 24 millisecondi. Il sistema respirava. Il sistema era ancora vivo.
+E se il sistema era vivo, Andriy, ovunque fosse finito nelle fauci russe, stava mantenendo la sua linea di difesa. Io dovevo solo mantenere la mia. E la mia linea era infinitamente più umiliante: io non ero una guerriera silenziosa. Io dovevo essere una debole criminale di strada.
+
+
+Ma c'era una dissonanza fondamentale nel modo in cui mi trattavano.
+Nei mesi precedenti all'arresto, io avevo gestito i server grezzi inviatimi da Andriy e avevo iniziato a compilare la lista dei nodi dell'architettura che Michael mi aveva descritto dai suoi nascondigli israeliani. Avevo crittografato l'equivalente digitale del progetto Manhattan. Se l'intelligence iraniana, temibile e metodica, avesse avuto anche la minima idea del payload che avevo sparpagliato nei cluster dormienti, la mia prigionia avrebbe assunto contorni puramente cibernetici.
+
+Invece, il mio primo interrogatorio era stato un manuale di polizia morale e paranoia antiquata.
+
+Erano venuti a prendermi all'alba, o almeno così mi era sembrato dal freddo tagliente nell'aria. Mi avevano bendata e condotta in una stanza che odorava di fumo di sigaretta e tè nero. 
+Quando mi tolsero la benda, mi trovai faccia a faccia con un funzionario di mezza età. Non era un tecnico. Indossava la classica camicia senza cravatta, col colletto abbottonato fino in cima, segno di fedeltà al regime. 
+
+Non aveva schermi del computer sulla scrivania. Aveva faldoni di carta. 
+
+«Neda,» aveva esordito, leggendo da un foglio stampato male. «Arrestata per attività sediziose. Contatti con entità sovversive straniere. Hai usato software di elusione per coordinare manifestazioni studentesche l'anno scorso?»
+Quella domanda mi colpì come una secchiata di acqua fresca in faccia, ma tenni i muscoli del viso immobili.
+Le manifestazioni studentesche? Certo, avevo fornito VPN ai ragazzi per aggirare il blocco di internet. Ma quello era rumore di fondo. Era attività di livello uno. Loro mi interrogavano sulle mie infrazioni stradali, ignorando che avevo rubato il furgone blindato.
+
+«Io sono un perito informatico,» risposi, cercando di flettere la voce il meno possibile per nascondere la vertigine del sollievo. «Riparo server commerciali per le aziende del bazar. Conosco chi scarica i software. Loro conoscono me.»
+
+L'interrogatore batté la penna sul tavolo. «Non giocare con me, sorella. Hai usato proxy istradati in Nord Europa. I nostri tecnici del Cyber Command ci dicono che hai contatti oltre confine. Chi è la tua reclutata? Hai finanziato tu la rete clandestina che ha distribuito i volantini?»
+
+Volantini. 
+Volevo quasi piangere dalla gioia, ma mi morsicai il labbro inferiore fino a sentire il sapore ferroso del sangue.
+L'apparato si era fermato alla superficie. Il Cyber Command iraniano aveva rilevato i miei movimenti anomali di traffico, vero. Ma non avevano minimamente decrittato i pacchetti. Credevano che l'aumento esponenziale della mia attività di rete fosse legato all'attivismo politico interno. Non avevano idea di Arkana. Non avevano idea che Andriy, in quel momento — e io non potevo sapere dove fosse — stava coprendo le mie tracce, attirando il fuoco centrale dei cecchini su di lui.
+
+«Signore,» dissi abbassando lo sguardo, adottando la postura umile che si aspettavano da una donna colpevole. «I proxy sono costosi. Li affittavo per vendere larghezza di banda senza che i provider rintracciassero i pagamenti delle tasse. Tutto qui. Avidità, non politica.»
+
+Questa è la prima regola della sopravvivenza in un interrogatorio che non verte sul tuo peccato principale: offri ai tuoi aguzzini un difetto minore da punire. Sconfessa gli ideali, ammetti i difetti umani per cui provano disprezzo. Loro adoravano vedere qualcuno crollare non per ideologia, ma per avidità borghese.
+
+
+La quarta volta che mi portarono nella stanza degli interrogatori, l'odore di fumo stantio era sparito, sostituito dal profumo pungente e artificiale di acqua di colonia a buon mercato.
+
+Dietro la scrivania non c'era l'anziano burocrate. C'era un uomo più giovane, sui quarant'anni, con la barba curata e una camicia bianca inamidata. Era il profilo del nuovo zelo teocratico: tecnocrate, spietato, desideroso di promuoversi nell'organigramma del Ministero. 
+
+«Mi chiamo Hamid,» disse allacciandosi le mani sul tavolo. «Il mio predecessore pensava che fossi solo una ladra di banda larga. Io penso che tu sia una ladra molto più sofisticata, Neda.»
+
+Un brivido freddo, che non aveva nulla a che fare con l'umidità della prigione, mi attraversò la base del collo. Hamid aveva svoltato l'angolo.
+
+Poggiò un foglio di carta stampata di fronte a me. Era girato al contrario, ma i miei occhi allenati decodificarono la struttura della pagina ancor prima dei caratteri. Erano log di un firewall.
+«Abbiamo sequestrato due dei server civetta che usavi per instradare le VPN agli studenti dell'Università di Sharif,» disse Hamid, tamburellando con l'indice sul foglio. «Abbiamo smontato i dischi e fatto un'analisi forense profonda, ignorando le finte partizioni di sicurezza che avevi montato. Abbiamo trovato questo.»
+
+Girò il foglio.
+Guardai. Ed espirai. Non volontariamente, ma come se i polmoni avessero ceduto di colpo per lo stress. Hamid scambiò quell'espirazione per terrore. Sorrise, mostrando denti bianchi e perfetti. 
+
+«Sorpresa, vero?» sussurrò lui.
+Ero sorpresa, sì. Ma non per il motivo che credeva lui.
+Quelle stringhe stampate sul foglio erano i log di un banalissimo nodo d'uscita Tor. Erano tracce grezze di traffico indirizzato verso siti di attivismo politico europeo e un paio di exchange di criptovalute di terza fascia. Hamid era orgoglioso di aver scovato il mio forziere segreto. Hamid non aveva la minima, maledetta idea che quel forziere, quei server sequestrati all'università, erano solo la pattumiera esterna in cui buttavo le distrazioni.
+I veri file di Arkana, i pacchetti fantasma inviatimi da Andriy prima che cadesse la rete ucraina, non erano passati da quei server. E non avrebbero mai lasciato tracce così rozze da essere stampate su un foglio A4 in un interrogatorio del Ministero.
+
+La perfezione della mia sicurezza era stata oscurata dall'arroganza dell'aguzzino. Se Hamid avesse avuto anche solo un frammento del vero codice sorgente asimmetrico, non mi avrebbe interrogato in camicia bianca. Mi avrebbe torturato con elettrodi e tenaglie fino a estrarmi il nervo ottico.
+
+«Sì...» balbettai. Feci tremare le labbra. Portai le mani al petto, afferrando il tessuto ruvido del mio chador. «Va bene... va bene. Vi dirò per chi scaricavo i soldi. Vi dirò i nomi. Ma per favore, per favore non trasferitemi al blocco militare.»
+
+Piangevo lacrime vere. Lacrime di tensione, lacrime di pura solitudine accumulate in sei mesi di buio. Ma le stavo usando come un'arma di precisione. Hamid si appoggiò allo schienale della sedia, l'ego soddisfatto, convinto di aver appena spezzato una spia occidentale o un'anarchica insubordinata.
+Mentre piangevo per lui e gli consegnavo i nomi di tre miei vecchi clienti del bazar che già sapevo essere fuggiti dall'Iran due anni prima, il cuore mi batteva con la regolarità furiosa di una macchina perfettamente calibrata.
+Hanno fallito, Andriy. Non sanno cosa stiamo costruendo.
+
+
+«Una ladra, quindi.» Il funzionario sorrise, mostrando denti ingialliti dal tabacco. «Una piccola contrabbandiera di dati. Sei un'offesa all'ordine rivoluzionario.»
+
+«Sono disperata, signore,» sussurrai.
+E in quel sussurro mentito c'era l'intera mia fortezza.
+
+
+Dopo il mio crollo calcolato davanti a Hamid, il regime detentivo cambiò impercettibilmente. 
+Mi concessero venti minuti d'aria ogni tre giorni. Non in un cortile aperto, ma in un recinto di cemento armato avvolto nel filo spinato sul tetto del blocco femminile. Il cielo di Teheran era sempre oscurato da una patina di smog color ruggine, ma l'aria fresca, per quanto inquinata, era come morfina per i miei polmoni atrofizzati.
+
+Durante questi stacchi, potevo intravvedere le altre detenute. 
+Eran donne vere. Non fantasmi digitali come me. Donne che avevano marciato per le strade strappandosi l'hijab, donne che avevano scritto poesie controrivoluzionarie. Vedevo i segni fisici del loro coraggio: polsi slogati che guarivano male, ecchimosi giallastre sugli zigomi curvi, unghie divelte. Camminavano in cerchio a testa bassa, sussurrandosi parole di conforto nei punti ciechi delle telecamere.
+
+Io ero intatta.
+Hamid non mi aveva torturato fisicamente perché credeva di avermi già spezzato. Aveva ottenuto i suoi nomi falsi e i suoi server civetta. La mia pelle non mostrava i lividi purpurei delle altre. E questa assenza di dolore divenne il mio dolore più grande. 
+
+Provavo un senso di colpa atroce, quasi insopportabile. Loro stavano sanguinando per la libertà del nostro paese. Io stavo usando il loro sangue come rumore di fondo per nascondere un'architettura crittografica internazionale che non aveva alcuna bandiera. Ero un parassita geopolitico. Nelle fredde notti di Evin, mi stringevo il collo con le mie stesse mani, sperando che i guardiani dai monitor della sicurezza scambiassero il mio rimorso per follia da isolamento.
+
+
+Ogni volta che quell'uomo mi insultava, ogni volta che un secondino mi spingeva contro il muro chiamandomi sgualdrina sovversiva o ladra, un contatore silenzioso nei server dormienti ad Amman faceva scattare avanti un orologio di salvaguardia. Finché le domane vertevano sui VPN per gli studenti, l'architettura monumentale che io e Andriy avevamo sollevato dalle ceneri di Kiev era al sicuro.
+
+Il problema non era l'interrogatorio. 
+Il vero problema della stanza nel braccio 209 non era l'inizio. Era la durata. 
+
+Loro non avevano fretta. Il sistema giudiziario iraniano per i reati contro la sicurezza nazionale opera su una scala geologica. Non potevo confessare tutto quello che volevano senza destare sospetti, e non potevo negare fino allo sfinimento senza provocare ritorsioni fisiche serie. Così, mi infilai in una sottile terra di mezzo.
+Creai una falsa cooperazione ritardata. Ammettevo di aver aiutato un gruppo studentesco dopo dieci giorni di isolamento. Consegnavo l'alias di un dissidente già fuggito in Turchia dopo venti giorni. Fornivo una password scaduta di un account email ProtonMail dopo un mese.
+
+Sgocciolavo distrazioni per guadagnare tempo. Tempo per cosa? Non lo sapevo.
+
+
+Quando il senso di indegnità minacciava di paralizzarmi, bloccando l'esecuzione mentale del mio finto terminale Linux, richiamavo l'unico file di backup che mi era rimasto: il ricordo di Michael.
+
+Era successo durante il nostro primo contatto diretto, tramite un tunnel SSH crittografato che rimbalzava fino a un nodo d'uscita in Islanda. 
+«Neda,» mi aveva detto, in quella voce meccanica e distorta che mascherava l'età e l'etnia. «Ho studiato il Medio Oriente per tutta la mia vita. Israele, Iran, Siria. C'è una gravità specifica qui che l'Occidente non comprende. Loro combattono per il potere e per le risorse. Noi qui combattiamo per l'esistenza biologica e spirituale. Se accetti di costruire Arkana con me e Andriy, tu sarai il nostro nodo d'ancoraggio.»
+
+«Perché io?» avevo digitato, le mani sudate sulla tastiera nel buio del mio appartamento a Teheran. «Sono a due passi dalla sede dei Guardiani della Rivoluzione. È la posizione peggiore.»
+
+«È esattamente la posizione perfetta,» aveva risposto Michael, con la calma clinica di un ingegnere civile che progetta un ponte antisismico. «Il modo migliore per nascondere una bomba logica globale non è metterla in Svizzera o in Islanda. Li andranno a cercare i russi non appena il sistema si accenderà. Il posto migliore per seppellire i segreti di Arkana è il ventre stesso della bestia controllata dal regime più paranoico del mondo. L'Iran protegge i suoi confini digitali come una prigione. Tu devi usare il loro Muro dell'isolamento internet non per restarci chiusa dentro... ma per tenere tutti gli altri fuori. Se l'ancora cade, la rete non si disperde: si inabissa in attesa che qualcun altro trovi le chiavi asimmetriche nel Mediterraneo.»
+
+Adesso capivo. Non ero un parassita sulle spalle delle dissidenti iraniane. Io ero il peso morto che consentiva all'aerostato di non volare via prima del tempo. Il mio isolamento in Evin, l'umiliazione delle perquisizioni, la paura costante... erano lo scudo termico di Arkana. 
+Mentre l'intelligence mi teneva apparentemente sotto scacco per i miei reati da "contrabbandiera", la rete sotterranea che io avevo compilato stava decantando in decine di server inattivi. La condensa dell'attesa si stava accumulando.
+
+
+Il corpo femminile in prigione non si spegne in modo lineare. Cerca di salvarsi staccando i moduli non essenziali.
+
+Verso il quinto mese di detenzione, il mio ciclo mestruale scomparve. L'amenorrea da stress acuto e malnutrizione è un sintomo comune nel braccio 209. L'apparato riproduttivo si ferma, riconoscendo che non c'è futuro biologico in una cella di cemento armato foderata di muffa. I miei carcerieri iraniani non mi fornivano assorbenti, costringendomi nei mesi precedenti a usare stracci luridi strappati dall'orlo del chador, un'umiliazione calcolata per farti sentire sporca di fronte ad Allah. Ma quando il sangue si fermò, non provai sollievo. Provai la vertigine dell'annientamento totale. 
+
+Ero stata desessualizzata, denutrita, ridotta a un involucro di pelle pallida e ossa fragili. 
+
+Eppure, in questa regressione biologica, trovai un'inaspettata armatura difensiva. Non avevo più paura di essere aggredita. Non ero più una preda nella dinamica del patriarcato. Ero diventata uno scheletro asessuato, e per uomini come Hamid, uno scheletro asessuato non ha attrattiva punitiva. Non prova vergogna, perché non c'è più nulla che meriti di essere guardato. 
+
+In assenza del mio corpo, la mia mente dominava assoluta. Andriy, speravo, stava facendo la stessa cosa in Russia: ridursi a un hardware minimo per preservare i cluster crittografici. Le sere in cui il freddo era talmente pungente da non farmi addormentare, mi sedevo sul materassino, incrociavo le gambe e ripetevo a memoria lo schema di routing di Arkana. 
+Nodo 1: Amman, stabile. Nodo 2: Teheran sud, dormiente. Nodo 3: Beirut, offuscato. 
+
+Li contavo uno ad uno, come i grani di un masbaha digitale. Non importava se io non fossi più una donna. Importava che la rete fosse incinta del crollo del sistema che mi teneva prigioniera.
+
+
+
+ 
+Michael era scomparso nei suoi bunker radioattivi in Israele. Andriy era inghiottito dall'oscurità russa. Io ero seppellita tra i monti Alborz.
+Ma l'orologio interno del codice che avevo scritto lo sapeva.
+Ero una semente crittografica piantata nel suolo peggiore del pianeta, e non potevo fare altro che aspettare il buio, senza specchi e senza cielo, contando i battiti del mio cuore contro il pavimento di Evin.
+
+
+La vera abilità non sta nel raccontare una menzogna credibile, ma nel costruirle intorno un'impalcatura burocratica talmente noiosa da disincentivare chiunque cerchi di smontarla.
+
+Tre mesi dopo l'arresto, Hamid mi fece portare di nuovo nel suo ufficio asettico. 
+Questa volta sul tavolo non c'erano fogli stampati sparuti, ma un fascicolo alto sei centimetri. Nomi, transazioni bancarie, numeri di targa.
+
+«Hai collaborato, Neda,» disse sfogliando lentamente le pagine, senza guardarmi. «Abbiamo arrestato due dei tuoi complici del bazar. Abbiamo sequestrato quindicimila dollari in criptovalute che usavate per evadere il controllo della Banca Centrale e pagare server esteri. Siete marci. Siete l'ulcera capitalista di questa nazione.»
+
+«Chiedo pietà. Eravamo disperati,» recitai, guardandomi le punte delle scarpe sprovviste di lacci. 
+
+I complici di cui parlava erano, ovviamente, due trafficanti di valuta nera che avevo selezionato appositamente per le loro agende compromesse. Avevo lasciato tracce digitali verso di loro proprio perché l'intelligence potesse trovarli e sentirsi soddisfatta. Avevano distolto risorse, uomini e tempo per sgominare una banalissima rete di hawala digitale, e l'avevano innalzata orgogliosamente al rango di "successo contro-sedizioso".
+
+Vederlo compiacersi della sua deduzione fu il momento più pericoloso della mia detenzione. Combatté l'impulso fisico di ridere in faccia a quel tecnocrate vestito bene. Hamid era il perfetto prodotto di un sistema autoritario: abituato a vedere il mondo solo in bianco e nero, non riusciva a immaginare l'esistenza degli infrarossi.
+
+Aggiunsi un altro blocco al labirinto: «Nel disco di backup che tenevo nel vaso di ceramica a casa... ci sono le vecchie ricevute del 2021 signore. Alcuni flussi andavano a intermediari legati ad armatori nel porto di Bandar Abbas. Loro usavano la nostra VPN per coprire le sanzioni americane sul petrolio.»
+
+Nel dirlo, scoppiai a singhiozzare, apparentemente devastata dall'aver tradito persino quel livello di complicità.
+Hamid si sporse in avanti, l'avidità negli occhi. Avevo appena buttato un amo che legava la mia finta rete civile alla corruzione marittima interna del paese. Questo li avrebbe tenuti occupati per almeno altri sette mesi d'indagini interne. Mentre loro avrebbero rincorso fatture false e petroliere, il silenzio mortale sui veri server di Arkana sarebbe persistito, permettendo ai DNS di propagarsi passivamente senza destare allarmi.
+
+«Molto bene, Neda,» disse Hamid a mezza voce, chiudendo il fascicolo. «Questo tuo... pentimento... potrebbe salvarti dalla forca. Le indagini continueranno. Rimani a disposizione del blocco 209.»
+
+Fui riportata indietro.
+Niente luce naturale, niente specchi. Ancora condensa e freddo invernale sui muri.
+Ma mentre il secondino chiudeva la porta sbarrata e mandava le mandate metalliche, io alzai lo sguardo verso il soffitto cieco.
+
+Seppellita sotto milioni di chilogrammi di ignoranza paranoica, io, la contrabbandiera da due soldi, stavo trionfando in rigoroso silenzio.
+
+
+Verso la fine dell'inverno, la routine del braccio 209 subì un'accelerazione improvvisa. 
+
+Fui prelevata non all'alba, ma nel primo pomeriggio. Mi portarono in una stanza diversa. Non c'era la solita scrivania di legno truciolare, ma un tavolo con una tovaglia e una telecamera fissa su un treppiede, collegata a un monitor esterno.
+
+Hamid era lì, ma indossava una cravatta scura. Non mi guardava con sospetto. Mi guardava con la condiscendenza che si riserva ai peccatori pentiti in uno show televisivo.
+
+«Neda,» disse lui, indicandomi una sedia imbottita davanti all'obiettivo. «Le nostre indagini sulla tua frode fiscale e sui traffici di valuta del bazar sono concluse. Hai collaborato. Hai fatto i nomi di quei cani che lucravano aggirando le sanzioni del nostro paese.»
+
+Mi sedetti lentamente, avvolgendo stretto il chador attorno alle spalle ossute, mantenendo lo sguardo a terra. Sapevo esattamente cosa stava succedendo.
+
+«La Repubblica Islamica è severa con i nemici, ma misericordiosa con chi ammette i propri errori,» continuò Hamid, sistemandosi i polsini della camicia. «Il giudice ha stabilito che non sei un'agente straniera. Sei solo una piccola criminale informatica che ha ceduto all'avidità. Se leggerai questa dichiarazione davanti alla telecamera, ammettendo i tuoi crimini finanziari e chiedendo scusa alla Guida Suprema, il tuo fascicolo al Ministero dell'Intelligence verrà chiuso. Verrai trasferita nel braccio comune femminile. Avrai vestiti da donna. E forse, tra due o tre anni, la grazia.»
+
+Mise un foglio dattiloscritto davanti a me. 
+Era il patto di Faust nella sua variante più economica. Volevano che recitassi la parte della ladra patetica in televisione nazionale per chiudere un'imbarazzante disfunzione nella sorveglianza interna di Teheran. Avevano bisogno di una vittoria burocratica.
+
+Fissai il foglio. Le mie dita tremavano. 
+«Tutto... tutto qui?» chiesi, con la voce rotta da veri mesi di inedia, rendendo l'interpretazione dolorosamente autentica. «Nessun processo militare?»
+
+«Nessun processo militare,» confermò Hamid. «Solo la verità in televisione.»
+
+La *verità*.
+Una risata isterica mi si gonfiò nel petto, ma la repressi con la forza spietata di chi ha trasformato la propria anima in codice binario. La "verità" che stavo per leggere certificava ufficialmente, davanti a tutto il direttorato di Teheran, che io non avevo assolutamente niente a che fare con reti asimmetriche straniere. Leggendo quel foglio, Hamid stava murando viva Arkana nel posto più sicuro del mondo: dietro un caso giudiziario già chiuso. 
+
+Asciugai una lacrima che scese per caso dall'occhio sinistro. Annuii freneticamente, mostrando un sollievo patetico e devoto.
+«Sì. Leggerò tutto quello che mi chiedete. Qualsiasi cosa.»
+
+Hamid sorrise. Fece un cenno al tecnico dietro la telecamera. Il led rosso di registrazione si accese. 
+
+E mentre io iniziavo a leggere la mia confessione di falsa contrabbandiera finanziaria, le parole uscivano dalla mia bocca morte, neutre. Ero distrutta fisicamente, esiliata mentalmente, dimenticata dal mondo libero. 
+Ma dietro quegli occhi neri, stanchi e opachi che guardavano l'obiettivo dell'intelligence iraniana, brillava il riflesso di cento server fantasma pronti a svegliarsi.
+Prima vivi.
+Il resto, l'avevo già vinto.
+
+
+
+Mentre le guardie mi sollevavano dalla sedia tirandomi brutalmente per le braccia indolenzite, gettai un'ultima occhiata al faretto accecante della telecamera statale gestita da Hamid. Quell'obiettivo di vetro freddo non registrava la mia disfatta, ma la posa della prima pietra vera di Arkana. E quando sarei uscita da quell'inferno carcerario di finta pietà patriarcale, loro avrebbero trovato un'infrastruttura asimmetrica irreversibile ad aspettarli sotto la polvere.
+
+
+Il trasferimento al braccio comune avvenne settantadue ore dopo la registrazione della mia finta confessione.
+
+Uscire dall'isolamento bianco fu un trauma ottico e uditivo devastante. Quando la guardia aprì il pesante cancello d'acciaio della sezione generale femminile, venni investita da un'onda sonora caotica. C'erano oltre duecento donne ammassate in uno spazio costruito per ospitarne cinquanta. L'odore era un impasto denso e penetrante di sapone scadente, sudore, pane raffermo e sangue mestruale lavato alla bell'e meglio nei lavandini comuni.
+
+Mi fermai sulla soglia, barcollando come un ubriaco. Una luce solare debole scese da un finestrone altissimo, colpendo il pulviscolo che danzava sopra le teste velate. Era la prima volta che vedevo la luce naturale in quasi nove mesi. Mi bruciava le retine, ma non riuscivo a chiudere gli occhi. 
+
+Alcune donne più anziane, veterane del blocco, si accorsero di me. Mi videro: uno spettro magrissimo, con le occhiaie infossate fino agli zigomi e le ginocchia che tremavano sotto la stoffa logora della divisa. Nessuna mi chiese quale fosse il mio crimine politico. Non c'era bisogno di interrogatori qui dentro. Capirono immediatamente che arrivavo dalla zona dell'Intelligence.
+
+Una di loro, con i capelli grigi tagliati cortissimi e una profonda cicatrice sopra il sopracciglio, si fece spazio tra la folla. Mi prese dolcemente per il gomito, sostenendo il mio peso inesistente. 
+«Vieni, figlia mia,» sussurrò in un farsi dolce e raschiante. «Hai finito con i carnefici per un po'. Abbiamo uno spazio vicino al termosifone.»
+
+Fu in quel momento, sentendo il calore umano di una mano estranea che non voleva né picchiarmi né strapparmi frammenti di codice, che la mia armatura tecnica si incrinò. E piansi, non le lacrime calcolate e ciniche di fronte ad Hamid per la televisione di stato, ma lacrime vere, salate e calde, che lavarono via lo smalto inchiostrato del terrore nel nascondiglio perfetto di Arkana.

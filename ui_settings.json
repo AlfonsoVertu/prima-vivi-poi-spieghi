@@ -7,5 +7,7 @@
       "url": "https://paypal.me/example",
       "desc": "Supporta l'autore con una donazione libera su PayPal."
     }
-  ]
+  ],
+  "frontend_chat_model": "openai|gpt-4o-mini",
+  "admin_chat_model": "openai|gpt-4o-mini"
 }

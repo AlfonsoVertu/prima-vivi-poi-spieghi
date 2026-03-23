@@ -223,13 +223,25 @@ def run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=""
     
     # --- STAGE 0: ARCHETIPO (System) ---
     canon = get_full_canon()
-    sys_instr = prompts.get("system_instruction", "") + f"\n\n[[CANONE_DEFINITIVO]]:\n{canon}"
+    sys_instr = prompts.get("system_instruction", "") 
+    
+    # Per il lettore, limitiamo il canone (o aggiungiamo un forte vincolo)
+    if not admin_mode:
+        sys_instr += f"\n\n[[CONTESTO_ARCHIVIO_SPOILER_FREE]]:\n{canon}\n\nATTENZIONE: Stai parlando con un LETTORE che si trova al Capitolo {cap_id}. NON svelare nulla di ciò che accade dopo questo punto. Usa il Canone solo per coerenza del passato e del mondo."
+    else:
+        sys_instr += f"\n\n[[CANONE_DEFINITIVO]]:\n{canon}"
+        
     messages.append({"role": "system", "content": sys_instr})
 
     # --- STAGE 1: STRUTTURA (Metadata Table) ---
     meta_table = "### STRUTTURA OPERA (ToC)\n"
     for c in caps:
-        meta_table += f"Cap {c['id']}: {c['titolo']} ({c['pov']})\n"
+        # Per il lettore, mostriamo solo i titoli fino al capitolo corrente
+        if not admin_mode and c['id'] > cap_id:
+            meta_table += f"Cap {c['id']}: [NON ANCORA DISPONIBILE]\n"
+        else:
+            meta_table += f"Cap {c['id']}: {c['titolo']} ({c['pov']})\n"
+            
     messages.append({"role": "user", "content": f"Analizza la struttura globale:\n{meta_table}\n\nRichiesta specifica: {user_msg}"})
     messages.append({"role": "assistant", "content": "Struttura acquisita. Procedo con l'analisi temporale."})
 
@@ -248,11 +260,12 @@ def run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=""
 
     # --- STAGE 2: MEMORIA STORICA (Summaries) ---
     # Prendiamo i riassunti rilevanti (tutti per admin, solo precedenti per lettore)
-    relevant_summaries = [f"Cap {c['id']}: {c.get('riassunto','')}" for c in caps if (not admin_mode and c['id'] < cap_id) or admin_mode]
+    relevant_summaries = [f"Cap {c['id']}: {c.get('riassunto','')}" for c in caps if (not admin_mode and c['id'] <= cap_id) or admin_mode]
     summaries_text = "### ANALISI STORICA (RIASSUNTI)\n" + "\n".join(relevant_summaries)
     
     # Se troppo lungo, mandiamo solo un chunk compatto (pruning preventivo)
     if len(summaries_text.split()) > (max_tokens_limit // 4):
+        # Per il lettore, se siamo troppo avanti, mostriamo solo gli ultimi N
         summaries_text = "### ANALISI STORICA COMPATTA (Riassunti salienti)\n" + "\n".join(relevant_summaries[-20:])
         
     messages.append({"role": "user", "content": summaries_text})
@@ -687,7 +700,7 @@ function toggleAIChat() {
     }
 }
 
-function sendAIChatMessage() {
+async function sendAIChatMessage() {
     const input = document.getElementById('ai-chat-input');
     const text = input.value.trim();
     if (!text) return;
@@ -709,47 +722,87 @@ function sendAIChatMessage() {
     messagesDiv.appendChild(loadingBubble);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
     
-    // Trova l'ID del capitolo dalla URL (se è /cap/X nell'admin)
     let capIdStr = window.location.pathname.split('/')[2];
     let capId = parseInt(capIdStr);
     if (isNaN(capId)) capId = 1; 
     
     chatMsgHistory.push({"role": "user", "content": text});
     
-    fetch(`/api/chat/${capId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            "message": text,
-            "admin_mode": true, /* ADMIN MODE: Full Spoilers */
-            "history": chatMsgHistory
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        const loading = document.getElementById('ai-chat-loading');
-        if (loading) loading.remove();
+    try {
+        const response = await fetch(`/api/chat/${capId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text, admin_mode: true, stream: true, history: chatMsgHistory })
+        });
+
+        if (loadingBubble) loadingBubble.remove();
         
         const aiBubble = document.createElement('div');
-        aiBubble.style = "align-self:flex-start; background:rgba(255,255,255,0.05); color:#d5d5d5; padding:10px 14px; border-radius:12px 12px 12px 0; max-width:85%; line-height:1.5; white-space:pre-wrap";
-        
-        if (data.error) {
-            aiBubble.style.color = "#cf6f6f";
-            aiBubble.textContent = "Errore: " + data.error;
-        } else {
-            let formattedHtml = data.reply.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>');
-            aiBubble.innerHTML = formattedHtml;
-            chatMsgHistory.push({"role": "ai", "content": data.reply});
-        }
-        
+        aiBubble.style = "align-self:flex-start; background:rgba(255,255,255,0.05); color:#d5d5d5; padding:10px 14px; border-radius:12px 12px 12px 0; max-width:85%; line-height:1.5;";
         messagesDiv.appendChild(aiBubble);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    })
-    .catch(err => {
-        const loading = document.getElementById('ai-chat-loading');
-        if (loading) loading.remove();
+
+        // Zona 1: status orchestratore (piccola, aggiornata senza sovrascrivere il testo)
+        const statusDiv = document.createElement('div');
+        statusDiv.style = "font-size:11px; color:#a888ca; margin-bottom:8px; opacity:0.8; font-style:italic; min-height:16px;";
+        aiBubble.appendChild(statusDiv);
+
+        // Zona 2: risposta cumulativa (mai sovrascritta)
+        const replyDiv = document.createElement('div');
+        replyDiv.style = "white-space:pre-wrap; margin-top:4px;";
+        aiBubble.appendChild(replyDiv);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullReply = "";
+        let reasoningDiv = null;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\\n");
+            
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    const dataStr = line.slice(6).trim();
+                    if (dataStr === "[DONE]") continue;
+                    try {
+                        const data = JSON.parse(dataStr);
+                        if (data.error) {
+                            replyDiv.innerHTML = `<span style="color:#cf6f6f">Errore: ${data.error}</span>`;
+                        } else if (data.stage === "context" || data.stage === "orchestrator") {
+                            // Aggiorna solo il piccolo status — NON sovrascrive la risposta
+                            statusDiv.textContent = data.content;
+                        } else if (data.stage === "reasoning_start") {
+                            reasoningDiv = document.createElement("div");
+                            reasoningDiv.style = "font-size:11px; background:rgba(168,136,202,0.05); padding:8px; border-radius:6px; margin-bottom:8px; border-left:2px solid #a888ca; color:#aaa; font-style:italic;";
+                            reasoningDiv.innerHTML = "<strong style='color:#a888ca; font-style:normal'>Analisi in corso:</strong><br>";
+                            replyDiv.appendChild(reasoningDiv);
+                        } else if (data.stage === "reasoning") {
+                            if (reasoningDiv) reasoningDiv.innerHTML += data.content;
+                        } else if (data.stage === "synthesis_start") {
+                            statusDiv.style.opacity = "0.4"; // sfuma lo status quando parte la risposta
+                        } else if (data.stage === "synthesis") {
+                            fullReply += data.content;
+                            if (fullReply.length > 0) statusDiv.style.display = 'none'; // nasconde status appena arriva testo
+                            let formatted = fullReply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\\n/g, '<br>');
+                            replyDiv.innerHTML = formatted;
+                        }
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    } catch (e) { }
+                }
+            }
+        }
+        chatMsgHistory.push({"role": "ai", "content": fullReply});
+    } catch (err) {
+        if (loadingBubble) loadingBubble.remove();
         console.error(err);
-    });
+        const errBubble = document.createElement('div');
+        errBubble.style = "align-self:flex-start; background:rgba(207,111,111,0.1); color:#cf6f6f; padding:10px 14px; border-radius:12px; font-size:13px";
+        errBubble.textContent = "Errore di connessione.";
+        messagesDiv.appendChild(errBubble);
+    }
 }
 
 window.fullSubtitle = {{ fullSubtitle | tojson | safe if fullSubtitle is defined else '""' }};
@@ -1130,7 +1183,7 @@ function toggleAIChat() {
     }
 }
 
-function sendAIChatMessage() {
+async function sendAIChatMessage() {
     const input = document.getElementById('ai-chat-input');
     const text = input.value.trim();
     if (!text) return;
@@ -1162,42 +1215,71 @@ function sendAIChatMessage() {
     // Aggiungi alla history 
     chatMsgHistory.push({"role": "user", "content": text});
     
-    // Esegui la chiamata Fetch Ajax
-    fetch(`/api/chat/${capId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            "message": text,
-            "admin_mode": false, /* Frontend mode */
-            "history": chatMsgHistory
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        const loading = document.getElementById('ai-chat-loading');
-        if (loading) loading.remove();
+    try {
+        const response = await fetch(`/api/chat/${capId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text, admin_mode: false, stream: true, history: chatMsgHistory })
+        });
+
+        if (loadingBubble) loadingBubble.remove();
         
         const aiBubble = document.createElement('div');
-        aiBubble.style = "align-self:flex-start; background:rgba(255,255,255,0.05); color:#d5d5d5; padding:10px 14px; border-radius:12px 12px 12px 0; max-width:85%; line-height:1.5; white-space:pre-wrap";
-        
-        if (data.error) {
-            aiBubble.style.color = "#cf6f6f";
-            aiBubble.textContent = "Il varco narrativo è interrotto. Errore: " + data.error;
-        } else {
-            // Sostituiamo gli asterischi con bold semplice per markdown
-            let formattedHtml = data.reply.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>');
-            aiBubble.innerHTML = formattedHtml;
-            chatMsgHistory.push({"role": "ai", "content": data.reply});
-        }
-        
+        aiBubble.style = "align-self:flex-start; background:rgba(255,255,255,0.05); color:#d5d5d5; padding:10px 14px; border-radius:12px 12px 12px 0; max-width:85%; line-height:1.5;";
         messagesDiv.appendChild(aiBubble);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    })
-    .catch(err => {
-        const loading = document.getElementById('ai-chat-loading');
-        if (loading) loading.remove();
+
+        // Zona 1: status orchestratore (aggiornato in place, non sovrascrive la risposta)
+        const statusDiv = document.createElement('div');
+        statusDiv.style = "font-size:11px; color:var(--accent); margin-bottom:8px; opacity:0.7; font-style:italic; min-height:16px;";
+        aiBubble.appendChild(statusDiv);
+
+        // Zona 2: risposta cumulativa della Guida
+        const replyDiv = document.createElement('div');
+        replyDiv.style = "white-space:pre-wrap; margin-top:4px;";
+        aiBubble.appendChild(replyDiv);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullReply = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\\n");
+            
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    const dataStr = line.slice(6).trim();
+                    if (dataStr === "[DONE]") continue;
+                    try {
+                        const data = JSON.parse(dataStr);
+                        if (data.error) {
+                            replyDiv.innerHTML = `<span style="color:#cf6f6f">Il varco narrativo è interrotto. Errore: ${data.error}</span>`;
+                        } else if (data.stage === "context" || data.stage === "orchestrator") {
+                            // Aggiorna solo lo status — NON sovrascrive la risposta cumulativa
+                            statusDiv.textContent = data.content;
+                        } else if (data.stage === "synthesis") {
+                            fullReply += data.content;
+                            if (fullReply.length > 0) statusDiv.style.display = 'none';
+                            let formatted = fullReply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\\n/g, '<br>');
+                            replyDiv.innerHTML = formatted;
+                        }
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    } catch (e) { }
+                }
+            }
+        }
+        chatMsgHistory.push({"role": "ai", "content": fullReply});
+    } catch (err) {
+        if (loadingBubble) loadingBubble.remove();
         console.error(err);
-    });
+        const errBubble = document.createElement('div');
+        errBubble.style = "align-self:flex-start; background:rgba(207,111,111,0.1); color:#cf6f6f; padding:10px 14px; border-radius:12px; font-size:13px";
+        errBubble.textContent = "Il varco narrativo è interrotto.";
+        messagesDiv.appendChild(errBubble);
+    }
 }
 // Add simple keyframe for loading pulse
 const style = document.createElement('style');
@@ -1738,7 +1820,7 @@ def admin_contatti():
 @app.route("/api/lmstudio/discover")
 @login_required
 def api_lmstudio_discover():
-    base_url = request.args.get("url", get_env_var("LMSTUDIO_URL", "http://192.168.1.62:1234"))
+    base_url = request.args.get("url", get_env_var("LMSTUDIO_URL", "http://192.168.1.51:1234"))
     api_key = request.args.get("key", get_env_var("LMSTUDIO_API_KEY", ""))
     try:
         import llm_client
@@ -1750,7 +1832,7 @@ def api_lmstudio_discover():
 @app.route("/api/lmstudio/test")
 @login_required
 def api_lmstudio_test():
-    base_url = request.args.get("url", get_env_var("LMSTUDIO_URL", "http://192.168.1.62:1234"))
+    base_url = request.args.get("url", get_env_var("LMSTUDIO_URL", "http://192.168.1.51:1234"))
     api_key = request.args.get("key", get_env_var("LMSTUDIO_API_KEY", ""))
     try:
         import requests
@@ -1770,6 +1852,7 @@ def api_chat(cap_id):
         
     user_msg = data.get("message")
     admin_mode = data.get("admin_mode", False)
+    should_stream = data.get("stream", True) # Default to stream now
     
     ui = load_ui_settings()
     prompts = load_prompts()
@@ -1792,28 +1875,37 @@ def api_chat(cap_id):
 
     from llm_client import generate_chapter_text
 
-    try:
-        # --- DEEP CONTEXT PIPELINE (STEP 1-3) ---
-        analysis_history = run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=user_msg, admin_mode=admin_mode)
+    if not should_stream:
+        try:
+            analysis_history = run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=user_msg, admin_mode=admin_mode)
+            r_prompt = prompts.get("chat_step4_reasoning_prompt", "Analizza il contesto e l'opera. Pianifica una risposta strategica in base alla richiesta dell'autore.")
+            r_history = analysis_history + [{"role": "user", "content": r_prompt}]
+            reasoning_plan = generate_chapter_text("", provider, model_name, api_key, max_tokens=1500, messages=r_history)
+            s_prompt = prompts.get("chat_step5_synthesis_prompt", "In base al ragionamento precedente, rispondi all'autore.")
+            s_history = analysis_history + [{"role": "assistant", "content": reasoning_plan}, {"role": "user", "content": s_prompt}]
+            reply = generate_chapter_text("", provider, model_name, api_key, max_tokens=2000, messages=s_history)
+            return jsonify({"reply": reply})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
-        # --- STEP 4: RAGIONAMENTO RAGIONATO ---
-        logger.info("Chat Step 4: Strategic Reasoning")
-        r_prompt = prompts.get("chat_step4_reasoning_prompt", "Analizza il contesto e l'opera. Pianifica una risposta strategica in base alla richiesta dell'autore.")
-        r_history = analysis_history + [{"role": "user", "content": r_prompt}]
-        reasoning_plan = generate_chapter_text("", provider, model_name, api_key, max_tokens=1500, messages=r_history)
-
-        # --- STEP 5: SINTESI FINALE ---
-        logger.info("Chat Step 5: Final Synthesis")
-        s_prompt = prompts.get("chat_step5_synthesis_prompt", "In base al ragionamento precedente, rispondi all'autore.")
-        s_history = analysis_history + [{"role": "assistant", "content": reasoning_plan}, {"role": "user", "content": s_prompt}]
-        reply = generate_chapter_text("", provider, model_name, api_key, max_tokens=2000, messages=s_history)
+    # Streaming mode
+    def generate():
+        import re
+        from ai_orchestrator import run_orchestrator_stream
         
-        return jsonify({"reply": reply})
+        try:
+            generator = run_orchestrator_stream(
+                cap_id, provider, model_name, api_key, user_msg, admin_mode, prompts,
+                get_all, get_full_canon, get_conn, read_txt, get_character_context
+            )
+            for chunk_sse in generator:
+                yield chunk_sse
+                
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+    from flask import Response
+    return Response(generate(), mimetype='text/event-stream')
 
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
@@ -2047,7 +2139,7 @@ def settings():
               <div class="field">
                 <label>LM Studio Base URL (Endpoint OpenAI-compatibile)</label>
                 <div style="display:flex; gap:10px;">
-                    <input type="text" name="LMSTUDIO_URL" id="lmstudio_url" value="{get_env_var('LMSTUDIO_URL', 'http://192.168.1.62:1234')}" placeholder="http://192.168.1.62:1234" style="flex:1">
+                    <input type="text" name="LMSTUDIO_URL" id="lmstudio_url" value="{get_env_var('LMSTUDIO_URL', 'http://192.168.1.51:1234')}" placeholder="http://192.168.1.51:1234" style="flex:1">
                 </div>
               </div>
               <div class="field" style="margin-top:10px">
@@ -2215,34 +2307,40 @@ def settings():
               <textarea name="revisione_prompt" class="tall">{prompts.get('revisione_prompt', '')}</textarea>
             </div>
 
-            <h2 style="margin-top:32px; color:var(--accent)">💬 Deep Chat Pipeline (5 Step Pass)</h2>
+            <h2 style="margin-top:32px; color:var(--accent)">💬 Multi-Agent RAG Pipeline (Orchestratore)</h2>
             <p style="color:var(--muted); font-size:11px; margin-bottom:16px">
-              Questa pipeline divide il contesto in 5 chiamate per non saturare la memoria dei modelli locali. Ogni step riceve l'analisi del precedente.
+              Questa pipeline usa un'architettura ad agenti asincroni coordinata dall'innovativo Orchestratore. I tre Sub-Agenti lavorano in <b style="color:var(--accent)">parallelo</b> per recuperare le informazioni, accelerando i tempi. L'Orchestratore valuta poi se le informazioni recuperate sono sufficienti per permettere all'Agente Principale di rispondere all'utente con precisione chirurgica.
             </p>
 
             <div class="field">
-              <label>Step 1: Analisi Metadati (Canone + Struttura)</label>
+              <label>Agent 1: Architetto (Struttura e Canone)</label>
+              <div style="font-size:10px; color:#c9a96e; margin-bottom:4px">⚠️ Eseguito in parallelo dal ThreadPool. Estrae limiti e regole globali.</div>
               <textarea name="chat_step1_metadata_prompt" class="tall">{prompts.get('chat_step1_metadata_prompt', '')}</textarea>
             </div>
             
             <div class="field">
-              <label>Step 2: Analisi Storia (Riassunti con Chunking)</label>
-              <div style="font-size:10px; color:#c9a96e; margin-bottom:4px">⚠️ Questo step viene ripetuto automaticamente per ogni blocco di capitoli che supera il limite token.</div>
+              <label>Agent 2: Storico (Recupero Eventi dai Riassunti)</label>
+              <div style="font-size:10px; color:#c9a96e; margin-bottom:4px">⚠️ Eseguito in parallelo dal ThreadPool. Trova i collegamenti nel passato.</div>
               <textarea name="chat_step2_summaries_prompt" class="tall">{prompts.get('chat_step2_summaries_prompt', '')}</textarea>
             </div>
 
             <div class="field">
-              <label>Step 3: Integrazione Testo Profondo (Prosa Integrale)</label>
+              <label>Agent 3: Lettore (Analisi Testo Profondo Corrente)</label>
+              <div style="font-size:10px; color:#c9a96e; margin-bottom:4px">⚠️ Eseguito in parallelo dal ThreadPool. Legge le singole parole per trovare odori, dialoghi e sensazioni.</div>
               <textarea name="chat_step3_deep_text_prompt" class="tall">{prompts.get('chat_step3_deep_text_prompt', '')}</textarea>
             </div>
 
-            <div class="field">
-              <label>Step 4: Ragionamento Strategico (Piano Risposta)</label>
+            <div class="field" style="border:1px solid #c9a96e; padding:12px; border-radius:6px; background:rgba(201,169,110,0.05)">
+              <label style="color:#c9a96e">Nodo Centrale: L'Orchestratore e Stratega (Valutazione)</label>
+              <div style="font-size:11px; color:#c9a96e; margin-bottom:6px; background:rgba(201,169,110,0.1); padding:8px; border-radius:4px; border-left:3px solid #c9a96e">
+                📌 Riceve i rapporti dei tre agenti paralleli. Valuta se c'è abbastanza materiale per rispondere all'utente o se ci sono punti ciechi. Disegna il piano d'azione finale per la Sintesi.
+              </div>
               <textarea name="chat_step4_reasoning_prompt" class="tall">{prompts.get('chat_step4_reasoning_prompt', '')}</textarea>
             </div>
 
             <div class="field">
-              <label>Step 5: Sintesi Finale (Risposta Utente)</label>
+              <label>Sintesi Finale: Agente Principale (Risposta Utente)</label>
+              <div style="font-size:10px; color:#c9a96e; margin-bottom:4px">L'Agente finale. Nasconde i suoi ragionamenti interni (rimuove i tag &lt;think&gt;) e risponde in Character come 'Guida dell'Archivio' senza mai svelare spoiler ai lettori.</div>
               <textarea name="chat_step5_synthesis_prompt" class="tall">{prompts.get('chat_step5_synthesis_prompt', '')}</textarea>
             </div>
           </div>
@@ -2482,7 +2580,7 @@ def admin_dashboard():
     <button class="btn" style="background:#1e1e1e;color:var(--accent)" onclick="document.getElementById('paste-json-container').style.display='block'">📝 Incolla JSON</button>
     <button class="btn" style="background:var(--accent);color:#1a1a1a;border-color:var(--accent);box-shadow: 0 0 10px rgba(232,213,183,0.3)" onclick="openMetadataModal()">✨ Genera Metadati</button>
     <a href="/flow" class="btn" style="background:#1e1e1e;color:#888;border-color:#333" title="Visualizza il flusso di lavoro AI">⚙️ Flusso</a>
-    <a href="/export/template" class="btn" style="background:#1a2e1a;color:#6fcf6f;border-color:#2d5a2d" title="Scarica un file JSON vuoto da usare come modello">📥 Template JSON</a>
+    <button class="btn" style="background:#1a2e1a;color:#6fcf6f;border-color:#2d5a2d" onclick="openExportModal()" title="Esportazione avanzata di metadati e testi">📥 Dati Avanzati</button>
     <a href="/admin/contatti" class="btn" style="background:#1e1e1a;color:var(--accent);border-color:#333">📩 Messaggi</a>
     <a href="/admin/sync" class="btn" style="background:#1e1e1e;color:#6fcf6f;border-color:#2d5a2d" title="Sincronizza i conteggi parole dal disco al database">🔄 Sync Parole</a>
     <a href="/rebuild" class="btn btn-primary" title="Ricostruisce il file HTML">⚡ Rebuild HTML</a>
@@ -2502,6 +2600,58 @@ def admin_dashboard():
     </div>
   </div>
 
+  <!-- Modal Export Dati Avanzato -->
+  <div id="export-avanzato-modal" class="full-text-overlay" style="display:none; z-index:2000; cursor:default">
+    <div class="full-text-modal" style="max-width:500px" onclick="event.stopPropagation()">
+      <span class="close-overlay" onclick="closeExportModal()">&times;</span>
+      <h2 style="color:var(--accent); margin-top:0">📥 Esportazione Dati Avanzata</h2>
+      <p style="font-size:14px; color:#aaa; margin-bottom:20px">Seleziona il tipo di esportazione per scaricare i dati del progetto PRIMA VIVI POI SPIEGHI.</p>
+      
+      <form id="export-form" method="GET" action="/export/advanced/full_relational">
+          <div class="form-group" style="margin-bottom:15px">
+            <label>Formato di Esportazione</label>
+            <select id="export-mode" onchange="toggleExportFields()" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid #333; border-radius:6px;">
+              <option value="testo">Solo Testo Puro (Archivio ZIP)</option>
+              <option value="meta_singolo">Singolo Tipo di Metadato (JSON)</option>
+              <option value="full_relational" selected>Export Completo Relazionale (JSON Master)</option>
+            </select>
+          </div>
+          
+          <div id="export-single-field" class="form-group" style="margin-bottom:15px; display:none">
+            <label>Seleziona Entità da Esportare</label>
+            <select id="export-entity" name="entity" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid #333; border-radius:6px;">
+              <option value="capitoli">Capitoli</option>
+              <option value="timeline">Timeline Temporale</option>
+              <option value="personaggi">Tabella Personaggi</option>
+              <option value="personaggi_capitoli">Presenze Personaggi (Log Relazionale)</option>
+            </select>
+          </div>
+          
+          <div style="margin-top:30px; text-align:right">
+            <button type="button" class="btn" onclick="closeExportModal()" style="margin-right:10px">Annulla</button>
+            <button type="button" class="btn btn-primary" onclick="submitExport()">Scarica File</button>
+          </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openExportModal() {{ document.getElementById('export-avanzato-modal').style.display = 'flex'; }}
+    function closeExportModal() {{ document.getElementById('export-avanzato-modal').style.display = 'none'; }}
+    function toggleExportFields() {{
+        const mode = document.getElementById('export-mode').value;
+        const form = document.getElementById('export-form');
+        document.getElementById('export-single-field').style.display = (mode === 'meta_singolo') ? 'block' : 'none';
+        
+        form.action = '/export/advanced/' + mode;
+    }}
+    document.getElementById('export-entity').addEventListener('change', toggleExportFields);
+    function submitExport() {{
+        toggleExportFields(); 
+        document.getElementById('export-form').submit();
+        closeExportModal();
+    }}
+  </script>
 
   <!-- Modal Generazione Metadati -->
   <div id="meta-gen-modal" class="full-text-overlay" style="display:none; z-index:2000; cursor:default">
@@ -3542,6 +3692,112 @@ def export_template():
     }
     bio = io.BytesIO(json.dumps(sample_data, indent=4, ensure_ascii=False).encode('utf-8'))
     return send_file(bio, as_attachment=True, download_name="template_import_capitoli.json", mimetype="application/json")
+
+
+@app.route("/export/advanced/<mode>")
+@login_required
+def export_advanced(mode):
+    conn = get_conn()
+    
+    if mode == "testo":
+        caps = conn.execute("SELECT * FROM capitoli ORDER BY id").fetchall()
+        mem_zip = io.BytesIO()
+        with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for c in caps:
+                testo = read_txt(c['id'])
+                fname = f"cap{c['id']:02d}_{c['titolo'].replace(' ', '_')}.txt"
+                zf.writestr(fname, testo.encode('utf-8'))
+        mem_zip.seek(0)
+        conn.close()
+        return send_file(mem_zip, mimetype="application/zip", as_attachment=True, download_name="prima-vivi-poi-spieghi_solo_testo.zip")
+
+    elif mode == "meta_singolo":
+        entity = request.args.get("entity", "capitoli")
+        if entity not in ["capitoli", "timeline", "personaggi", "personaggi_capitoli"]:
+            conn.close()
+            return "Invalid entity", 400
+        
+        order_by = "id"
+        if entity == "timeline": order_by = "arco_inizio"
+        elif entity == "personaggi_capitoli": order_by = "capitolo_id, personaggio_id"
+        
+        rows = conn.execute(f"SELECT * FROM {entity} ORDER BY {order_by}").fetchall()
+        data = [dict(r) for r in rows]
+        conn.close()
+        bio = io.BytesIO(json.dumps(data, indent=2, ensure_ascii=False).encode('utf-8'))
+        return send_file(bio, as_attachment=True, download_name=f"export_{entity}.json", mimetype="application/json")
+
+    elif mode == "full_relational":
+        capitoli_rows = conn.execute("SELECT * FROM capitoli ORDER BY id").fetchall()
+        timeline_rows = conn.execute("SELECT * FROM timeline ORDER BY arco_inizio").fetchall()
+        personaggi_rows = conn.execute("SELECT * FROM personaggi ORDER BY id").fetchall()
+        pers_cap_rows = conn.execute("SELECT * FROM personaggi_capitoli ORDER BY capitolo_id, personaggio_id").fetchall()
+        conn.close()
+        
+        # COSTRUZIONE STRUTTURA RELAZIONALE
+        timeline_dict = {t['id']: dict(t) for t in timeline_rows}
+        for t_id in timeline_dict: timeline_dict[t_id]['capitoli_associati'] = []
+            
+        pers_dict = {p['id']: dict(p) for p in personaggi_rows}
+        
+        presenze_per_capitolo = {}
+        for pc in pers_cap_rows:
+            cid = pc['capitolo_id']
+            if cid not in presenze_per_capitolo: presenze_per_capitolo[cid] = []
+            pers_data = pers_dict.get(pc['personaggio_id'], {})
+            
+            presenze_per_capitolo[cid].append({
+                "personaggio": pers_data.get('nome', 'Sconosciuto'),
+                "ruolo_nel_romanzo": pers_data.get('ruolo', ''),
+                "presente_in_scena": bool(pc['presente']),
+                "luogo_azione": pc['luogo'],
+                "stato_emotivo": pc['stato_emotivo'],
+                "obiettivo_scena": pc['obiettivo'],
+                "azione_parallela": pc['azione_parallela'],
+                "sviluppo_personaggio": pc['sviluppo'],
+                "note_regia": pc['note']
+            })
+
+        capitoli_list = []
+        for c in capitoli_rows:
+            cap_dict = dict(c)
+            cap_dict['testo_narrativo'] = read_txt(c['id'])
+            cap_dict['personaggi_coinvolti'] = presenze_per_capitolo.get(c['id'], [])
+            capitoli_list.append(cap_dict)
+            
+            t_id = cap_dict.get('timeline_event_id')
+            if t_id and t_id in timeline_dict:
+                timeline_dict[t_id]['capitoli_associati'].append({
+                    "id": cap_dict['id'],
+                    "titolo": cap_dict['titolo'],
+                    "pov": cap_dict['pov']
+                })
+        
+        master_json = {
+            "_documentazione_software": {
+                "descrizione": "Export master relazionale del progetto PRIMA VIVI POI SPIEGHI. Questa struttura consolida l'intero database e i file testuali dell'opera in un unico documento navigabile.",
+                "struttura": {
+                    "timeline_eventi": "Lista cronologica degli eventi (archi creati per dare contesto globale all'AI). Ogni evento lista i capitoli associati in 'capitoli_associati'.",
+                    "capitoli_completati": "La struttura portante. Oltre ai metadati del DB (POV, luogo, riassunto, tensioni, obiettivi), include il 'testo_narrativo' (il romanzo testuale effettivo) e l'array 'personaggi_coinvolti' che documenta chi era in scena, cosa provava e l'azione parallela di chi era assente.",
+                    "anagrafica_personaggi": "Anagrafica completa e background profondo dei personaggi strutturati nel DB."
+                },
+                "motore_ai": "L'app Flask utilizza questo stesso formato relazionale frammentando i dati per iniettare contesto mirato (Timeline, Riassunti precedenti, Obiettivi dei personaggi) negli LLM (GPT, Claude, Gemini) quando rigenerano i testi o analizzano la correttezza della trama (pipeline multi-messaggio).",
+                "versione": "Export Finale Relazionale Unificato"
+            },
+            "opera": {
+                "titolo": get_project_title(),
+                "sottotitolo": get_env_var('PROJECT_SUBTITLE', ''),
+                "totale_capitoli": len(capitoli_list)
+            },
+            "timeline_eventi": list(timeline_dict.values()),
+            "anagrafica_personaggi": list(pers_dict.values()),
+            "capitoli_completati": capitoli_list
+        }
+        
+        bio = io.BytesIO(json.dumps(master_json, indent=2, ensure_ascii=False).encode('utf-8'))
+        return send_file(bio, as_attachment=True, download_name="prima-vivi-poi-spieghi_MASTER_EXPORT.json", mimetype="application/json")
+        
+    return "Invalid mode", 400
 
 @app.route("/export/all/meta")
 @login_required

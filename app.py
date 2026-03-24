@@ -4,11 +4,17 @@ Avvio: python app.py  →  http://localhost:5000
 """
 from flask import Flask, render_template_string, request, redirect, url_for, jsonify, send_file, session
 import sqlite3, os, json, io, zipfile, logging, re
+import time
 from functools import wraps
 from dotenv import load_dotenv
 
 import ai_queue
 import llm_client
+from agent_registry import ensure_schema as ensure_agent_registry_schema, list_agents as registry_list_agents, list_endpoints as registry_list_endpoints, seed_defaults as registry_seed_defaults, resolve_agent_for_role as registry_resolve_agent_for_role, upsert_agent as registry_upsert_agent, upsert_provider_endpoint as registry_upsert_provider_endpoint, get_agent as registry_get_agent, get_endpoint as registry_get_endpoint, set_agent_enabled as registry_set_agent_enabled, delete_agent as registry_delete_agent, delete_provider_endpoint as registry_delete_provider_endpoint, validate_agent_configuration as registry_validate_agent_configuration, export_registry_bundle as registry_export_bundle, import_registry_bundle as registry_import_bundle, upsert_discovery_cache as registry_upsert_discovery_cache, get_discovery_cache as registry_get_discovery_cache, readiness_report as registry_readiness_report
+from provider_discovery import discover_models as provider_discover_models, test_provider as provider_test_provider
+from chat_memory import upsert_session_memory, load_session_memory
+from spoiler_guard import enforce_reader_safety
+from chat_tools import execute_tool as chat_execute_tool, available_tools as chat_available_tools, available_tools_catalog as chat_available_tools_catalog
 from compila_iterativo import build_prompt
 import requests, base64
 from datetime import datetime
@@ -223,14 +229,17 @@ def run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=""
     
     # --- STAGE 0: ARCHETIPO (System) ---
     canon = get_full_canon()
-    sys_instr = prompts.get("system_instruction", "") 
-    
-    # Per il lettore, limitiamo il canone (o aggiungiamo un forte vincolo)
+    sys_instr = prompts.get("system_instruction", "")
+    # Reader mode: hard anti-spoiler boundary (niente canone completo nel system prompt)
     if not admin_mode:
-        sys_instr += f"\n\n[[CONTESTO_ARCHIVIO_SPOILER_FREE]]:\n{canon}\n\nATTENZIONE: Stai parlando con un LETTORE che si trova al Capitolo {cap_id}. NON svelare nulla di ciò che accade dopo questo punto. Usa il Canone solo per coerenza del passato e del mondo."
+        sys_instr += (
+            f"\n\n[[POLITICA_LETTORE]]:\n"
+            f"Il lettore è fermo al Capitolo {cap_id}. Usa SOLO contesto da capitoli <= {cap_id}, timeline accessibile, stati personaggi accessibili e testo corrente. "
+            f"NON usare né citare informazioni dai capitoli futuri."
+        )
     else:
         sys_instr += f"\n\n[[CANONE_DEFINITIVO]]:\n{canon}"
-        
+
     messages.append({"role": "system", "content": sys_instr})
 
     # --- STAGE 1: STRUTTURA (Metadata Table) ---
@@ -365,6 +374,136 @@ def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def ensure_agent_registry_ready():
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+    finally:
+        conn.close()
+
+ensure_agent_registry_ready()
+
+def resolve_chat_model_from_registry(admin_mode):
+    role_key = "AnswerSynthesizer" if admin_mode else "ReaderAnswerer"
+    mode = "author" if admin_mode else "reader"
+    conn = get_conn()
+    try:
+        agent = registry_resolve_agent_for_role(conn, mode=mode, role_key=role_key)
+    finally:
+        conn.close()
+    if not agent:
+        return None
+
+    provider = agent.get("provider_type")
+    model_name = agent.get("model_id")
+    endpoint_base_url = agent.get("base_url") or ""
+    api_key = ""
+    api_key_env = (agent.get("api_key_env") or "").strip()
+    if api_key_env:
+        api_key = get_env_var(api_key_env, "")
+
+    if endpoint_base_url:
+        if provider == "lmstudio":
+            set_env_var("LMSTUDIO_URL", endpoint_base_url)
+        elif provider == "openai_compatible":
+            set_env_var("OPENAI_COMPATIBLE_URL", endpoint_base_url)
+        elif provider == "ollama":
+            set_env_var("OLLAMA_URL", endpoint_base_url)
+
+    return {
+        "provider": provider,
+        "model_name": model_name,
+        "api_key": api_key,
+        "agent": {
+            "agent_key": agent.get("agent_key"),
+            "label": agent.get("label"),
+            "role_key": agent.get("role_key"),
+            "provider_type": provider,
+            "model_id": model_name,
+        },
+    }
+
+
+def normalize_chat_history(history, max_turns=8):
+    if not isinstance(history, list):
+        return []
+    cleaned = []
+    for item in history:
+        if not isinstance(item, dict):
+            continue
+        role = (item.get("role") or "").strip().lower()
+        content = (item.get("content") or "").strip()
+        if role not in {"user", "assistant"}:
+            continue
+        if not content:
+            continue
+        cleaned.append({"role": role, "content": content})
+    if len(cleaned) > max_turns:
+        cleaned = cleaned[-max_turns:]
+    return cleaned
+
+
+def build_chat_session_key(cap_id, admin_mode):
+    role = "author" if admin_mode else "reader"
+    sid = session.get("sid")
+    if not sid:
+        sid = os.urandom(8).hex()
+        session["sid"] = sid
+    return f"{sid}:{role}:cap{cap_id}"
+
+
+def compose_user_message_with_history(user_msg, history):
+    turns = normalize_chat_history(history)
+    if not turns:
+        return user_msg
+
+    lines = ["[CONTESTO_CONVERSAZIONE_RECENTE]"]
+    for item in turns:
+        prefix = "Utente" if item["role"] == "user" else "Assistente"
+        lines.append(f"- {prefix}: {item['content']}")
+    lines.append("[/CONTESTO_CONVERSAZIONE_RECENTE]")
+
+    return f"{user_msg}\n\n" + "\n".join(lines)
+
+
+def parse_sse_payload(chunk_sse):
+    prefix = "data: "
+    if not isinstance(chunk_sse, str) or not chunk_sse.startswith(prefix):
+        return None
+    raw = chunk_sse[len(prefix):].strip()
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except Exception:
+        return None
+
+
+def log_spoiler_audit_event(session_key, cap_id, audit, rewritten):
+    if not session_key:
+        return
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        row = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+        session_id = row["id"] if row else None
+        conn.execute(
+            """
+            INSERT INTO chat_tool_runs (session_id, agent_id, tool_name, arguments_json, result_json, status, duration_ms)
+            VALUES (?, NULL, 'spoiler_audit', ?, ?, ?, 0)
+            """,
+            (
+                session_id,
+                json.dumps({"cap_id": cap_id}, ensure_ascii=False),
+                json.dumps({"audit": audit, "rewritten": rewritten}, ensure_ascii=False),
+                "blocked" if audit.get("status") == "unsafe" else "ok",
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 def get_all():
     conn = get_conn()
@@ -1844,6 +1983,481 @@ def api_lmstudio_test():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Errore: {str(e)}"}), 500
 
+@app.route("/api/ollama/discover")
+@login_required
+def api_ollama_discover():
+    base_url = request.args.get("url", get_env_var("OLLAMA_URL", "http://127.0.0.1:11434"))
+    try:
+        models = provider_discover_models("ollama", base_url=base_url)
+        return jsonify({"status": "success", "models": models})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/api/ollama/test")
+@login_required
+def api_ollama_test():
+    base_url = request.args.get("url", get_env_var("OLLAMA_URL", "http://127.0.0.1:11434"))
+    try:
+        result = provider_test_provider("ollama", base_url=base_url)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Errore: {str(e)}"}), 500
+
+@app.route("/api/openai-compatible/discover")
+@login_required
+def api_openai_compatible_discover():
+    base_url = request.args.get("url", get_env_var("OPENAI_COMPATIBLE_URL", ""))
+    api_key = request.args.get("key", get_env_var("OPENAI_COMPATIBLE_API_KEY", ""))
+    try:
+        models = provider_discover_models("openai_compatible", base_url=base_url, api_key=api_key)
+        return jsonify({"status": "success", "models": models})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/api/openai-compatible/test")
+@login_required
+def api_openai_compatible_test():
+    base_url = request.args.get("url", get_env_var("OPENAI_COMPATIBLE_URL", ""))
+    api_key = request.args.get("key", get_env_var("OPENAI_COMPATIBLE_API_KEY", ""))
+    try:
+        result = provider_test_provider("openai_compatible", base_url=base_url, api_key=api_key)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Errore: {str(e)}"}), 500
+
+@app.route("/api/agents")
+@login_required
+def api_agents_list():
+    mode = request.args.get("mode")
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        return jsonify({
+            "status": "success",
+            "agents": registry_list_agents(conn, mode=mode),
+            "endpoints": registry_list_endpoints(conn)
+        })
+    finally:
+        conn.close()
+
+@app.route("/api/agents/bootstrap", methods=["POST"])
+@login_required
+def api_agents_bootstrap():
+    conn = get_conn()
+    try:
+        result = registry_seed_defaults(conn)
+        return jsonify({"status": "success", **result})
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/save", methods=["POST"])
+@login_required
+def api_agents_save():
+    payload = request.json or {}
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_upsert_agent(conn, payload)
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        return jsonify({"status": status, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/<agent_key>")
+@login_required
+def api_agents_get(agent_key):
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        agent = registry_get_agent(conn, agent_key)
+        if not agent:
+            return jsonify({"status": "error", "message": "Agente non trovato"}), 404
+        return jsonify({"status": "success", "agent": agent})
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/<agent_key>/enabled", methods=["POST"])
+@login_required
+def api_agents_set_enabled(agent_key):
+    payload = request.json or {}
+    enabled = bool(payload.get("enabled", True))
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_set_agent_enabled(conn, agent_key, enabled)
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        return jsonify({"status": status, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/<agent_key>", methods=["DELETE"])
+@login_required
+def api_agents_delete(agent_key):
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_delete_agent(conn, agent_key)
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        return jsonify({"status": status, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/provider-endpoints/save", methods=["POST"])
+@login_required
+def api_provider_endpoints_save():
+    payload = request.json or {}
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_upsert_provider_endpoint(conn, payload)
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        return jsonify({"status": status, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/provider-endpoints/<endpoint_key>")
+@login_required
+def api_provider_endpoints_get(endpoint_key):
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        endpoint = registry_get_endpoint(conn, endpoint_key)
+        if not endpoint:
+            return jsonify({"status": "error", "message": "Endpoint non trovato"}), 404
+        return jsonify({"status": "success", "endpoint": endpoint})
+    finally:
+        conn.close()
+
+
+@app.route("/api/provider-endpoints/<endpoint_key>", methods=["DELETE"])
+@login_required
+def api_provider_endpoints_delete(endpoint_key):
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_delete_provider_endpoint(conn, endpoint_key)
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        return jsonify({"status": status, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/provider-endpoints/discover", methods=["POST"])
+@login_required
+def api_provider_endpoints_discover():
+    payload = request.json or {}
+    endpoint_key = (payload.get("endpoint_key") or "").strip()
+    if not endpoint_key:
+        return jsonify({"status": "error", "message": "endpoint_key mancante"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        endpoint = registry_get_endpoint(conn, endpoint_key)
+        if not endpoint:
+            return jsonify({"status": "error", "message": f"Endpoint non trovato: {endpoint_key}"}), 404
+        provider_type = endpoint.get("provider_type")
+        base_url = endpoint.get("base_url") or ""
+        api_key = get_env_var(endpoint.get("api_key_env"), "") if endpoint.get("api_key_env") else ""
+        models = provider_discover_models(provider_type, base_url=base_url, api_key=api_key)
+        cache_res = registry_upsert_discovery_cache(conn, endpoint_key, models)
+        if not cache_res.get("ok"):
+            return jsonify({"status": "error", **cache_res}), 400
+        return jsonify({"status": "success", "endpoint_key": endpoint_key, "provider_type": provider_type, "models": models})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    finally:
+        conn.close()
+
+
+@app.route("/api/provider-endpoints/test", methods=["POST"])
+@login_required
+def api_provider_endpoints_test():
+    payload = request.json or {}
+    endpoint_key = (payload.get("endpoint_key") or "").strip()
+    if not endpoint_key:
+        return jsonify({"status": "error", "message": "endpoint_key mancante"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        endpoint = registry_get_endpoint(conn, endpoint_key)
+        if not endpoint:
+            return jsonify({"status": "error", "message": f"Endpoint non trovato: {endpoint_key}"}), 404
+        provider_type = endpoint.get("provider_type")
+        base_url = endpoint.get("base_url") or ""
+        api_key = get_env_var(endpoint.get("api_key_env"), "") if endpoint.get("api_key_env") else ""
+        result = provider_test_provider(provider_type, base_url=base_url, api_key=api_key)
+        return jsonify({"status": "success", "endpoint_key": endpoint_key, "provider_type": provider_type, "result": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    finally:
+        conn.close()
+
+
+@app.route("/api/provider-endpoints/discovery-cache")
+@login_required
+def api_provider_endpoints_discovery_cache():
+    endpoint_key = (request.args.get("endpoint_key") or "").strip() or None
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_get_discovery_cache(conn, endpoint_key=endpoint_key)
+        return jsonify({"status": "success", **result})
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/validate")
+@login_required
+def api_agents_validate():
+    mode = (request.args.get("mode") or "").strip() or None
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_validate_agent_configuration(conn, mode=mode)
+        return jsonify({"status": "success", **result})
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/export")
+@login_required
+def api_agents_export():
+    mode = (request.args.get("mode") or "").strip() or None
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_export_bundle(conn, mode=mode)
+        if not result.get("ok"):
+            return jsonify({"status": "error", **result}), 400
+        return jsonify({"status": "success", **result})
+    finally:
+        conn.close()
+
+
+@app.route("/api/agentic/readiness")
+@login_required
+def api_agentic_readiness():
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        report = registry_readiness_report(conn)
+        status = "success" if report.get("ok") else "error"
+        code = 200 if report.get("ok") else 400
+        return jsonify({"status": status, **report}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/agentic/bootstrap-full", methods=["POST"])
+@login_required
+def api_agentic_bootstrap_full():
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        seed_result = registry_seed_defaults(conn)
+        report = registry_readiness_report(conn)
+        status = "success" if report.get("ok") else "error"
+        code = 200 if report.get("ok") else 400
+        return jsonify({"status": status, "seed": seed_result, "readiness": report}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/import", methods=["POST"])
+@login_required
+def api_agents_import():
+    payload = request.json or {}
+    bundle = payload.get("bundle")
+    overwrite = bool(payload.get("overwrite", False))
+    import_disabled = bool(payload.get("import_disabled", True))
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        result = registry_import_bundle(conn, bundle, overwrite=overwrite, import_disabled=import_disabled)
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        return jsonify({"status": status, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/agents/test", methods=["POST"])
+@login_required
+def api_agents_test():
+    data = request.json or {}
+    agent_key = (data.get("agent_key") or "").strip()
+    prompt = (data.get("prompt") or "Dimmi solo: OK")
+    if not agent_key:
+        return jsonify({"status": "error", "message": "agent_key mancante"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        row = conn.execute(
+            """
+            SELECT a.agent_key, a.label, a.provider_type, a.model_id, e.base_url, e.api_key_env
+            FROM chat_agents a
+            LEFT JOIN provider_endpoints e ON e.id = a.endpoint_id
+            WHERE a.agent_key=?
+            """,
+            (agent_key,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not row:
+        return jsonify({"status": "error", "message": f"Agente non trovato: {agent_key}"}), 404
+
+    agent = dict(row)
+    provider = agent.get("provider_type")
+    model = agent.get("model_id")
+    api_key = get_env_var(agent.get("api_key_env"), "") if agent.get("api_key_env") else ""
+
+    if agent.get("base_url"):
+        if provider == "lmstudio":
+            set_env_var("LMSTUDIO_URL", agent["base_url"])
+        elif provider == "openai_compatible":
+            set_env_var("OPENAI_COMPATIBLE_URL", agent["base_url"])
+        elif provider == "ollama":
+            set_env_var("OLLAMA_URL", agent["base_url"])
+
+    from llm_client import generate_chapter_text
+
+    try:
+        reply = generate_chapter_text(prompt, provider, model, api_key, max_tokens=120)
+        return jsonify({
+            "status": "success",
+            "agent": {
+                "agent_key": agent.get("agent_key"),
+                "label": agent.get("label"),
+                "provider": provider,
+                "model": model,
+            },
+            "reply": reply,
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/chat/tools")
+@login_required
+def api_chat_tools_list():
+    admin_mode = str(request.args.get("admin_mode", "false")).lower() in {"1", "true", "yes"}
+    detailed = str(request.args.get("detailed", "false")).lower() in {"1", "true", "yes"}
+    if detailed:
+        return jsonify({"status": "success", "tools": chat_available_tools_catalog(admin_mode=admin_mode)})
+    return jsonify({"status": "success", "tools": chat_available_tools(admin_mode=admin_mode)})
+
+
+@app.route("/api/chat/tools/execute", methods=["POST"])
+@login_required
+def api_chat_tools_execute():
+    data = request.json or {}
+    tool_name = (data.get("tool") or "").strip()
+    arguments = data.get("arguments") or {}
+    admin_mode = bool(data.get("admin_mode", False))
+    session_key = (data.get("session_key") or "").strip()
+
+    if not tool_name:
+        return jsonify({"status": "error", "message": "tool mancante"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        started = time.perf_counter()
+        result = chat_execute_tool(conn, tool_name, arguments, admin_mode=admin_mode)
+        duration_ms = int((time.perf_counter() - started) * 1000)
+
+        if session_key:
+            row = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+            session_id = row["id"] if row else None
+            if session_id is None:
+                mode = "author" if admin_mode else "reader"
+                cap_id = None
+                try:
+                    cap_id = int(arguments.get("cap_id")) if arguments.get("cap_id") is not None else None
+                except Exception:
+                    cap_id = None
+                cur = conn.execute(
+                    """
+                    INSERT OR IGNORE INTO chat_sessions (session_key, mode, cap_id, user_scope)
+                    VALUES (?, ?, ?, '')
+                    """,
+                    (session_key, mode, cap_id),
+                )
+                if cur.lastrowid:
+                    session_id = cur.lastrowid
+                else:
+                    row_retry = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+                    session_id = row_retry["id"] if row_retry else None
+            conn.execute(
+                """
+                INSERT INTO chat_tool_runs (session_id, agent_id, tool_name, arguments_json, result_json, status, duration_ms)
+                VALUES (?, NULL, ?, ?, ?, ?, ?)
+                """,
+                (
+                    session_id,
+                    tool_name,
+                    json.dumps(arguments, ensure_ascii=False),
+                    json.dumps(result, ensure_ascii=False),
+                    "ok" if result.get("ok") else "error",
+                    duration_ms,
+                ),
+            )
+            conn.commit()
+
+        status = "success" if result.get("ok") else "error"
+        code = 200 if result.get("ok") else 400
+        return jsonify({"status": status, "tool": tool_name, "result": result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/chat/tool-runs")
+@login_required
+def api_chat_tool_runs():
+    limit_raw = request.args.get("limit", "30")
+    session_key = (request.args.get("session_key") or "").strip()
+    try:
+        limit = max(1, min(int(limit_raw), 200))
+    except Exception:
+        return jsonify({"status": "error", "message": "limit non valido"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        params = []
+        query = (
+            "SELECT tr.id, tr.tool_name, tr.status, tr.duration_ms, tr.created_at, "
+            "s.session_key, a.agent_key "
+            "FROM chat_tool_runs tr "
+            "LEFT JOIN chat_sessions s ON s.id = tr.session_id "
+            "LEFT JOIN chat_agents a ON a.id = tr.agent_id "
+        )
+        if session_key:
+            query += "WHERE s.session_key = ? "
+            params.append(session_key)
+        query += "ORDER BY tr.id DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(query, tuple(params)).fetchall()
+        return jsonify({"status": "success", "runs": [dict(r) for r in rows]})
+    finally:
+        conn.close()
+
+
 @app.route("/api/chat/<int:cap_id>", methods=["POST"])
 def api_chat(cap_id):
     data = request.json
@@ -1851,7 +2465,27 @@ def api_chat(cap_id):
         return jsonify({"error": "No message provided"}), 400
         
     user_msg = data.get("message")
+    history = data.get("history", [])
     admin_mode = data.get("admin_mode", False)
+
+    session_key = (data.get("session_key") or "").strip() or build_chat_session_key(cap_id, admin_mode)
+    conn_mem = get_conn()
+    try:
+        memory_snapshot = upsert_session_memory(
+            conn_mem,
+            session_key=session_key,
+            mode="author" if admin_mode else "reader",
+            cap_id=cap_id,
+            history=normalize_chat_history(history),
+        )
+        persisted_memory = load_session_memory(conn_mem, session_key)
+    finally:
+        conn_mem.close()
+
+    user_msg = compose_user_message_with_history(user_msg, history)
+    if persisted_memory.get("open_questions"):
+        user_msg += "\n\n[MEMORIA_SESSIONE] Domande aperte: " + " | ".join(persisted_memory["open_questions"][:3])
+
     should_stream = data.get("stream", True) # Default to stream now
     
     ui = load_ui_settings()
@@ -1860,18 +2494,26 @@ def api_chat(cap_id):
     provider = get_env_var("LLM_PROVIDER", "openai")
     model_id = ui.get("admin_chat_model" if admin_mode else "frontend_chat_model", "claude-3-5-sonnet-20241022")
     model_name = model_id
-    
+
     local_model = get_env_var("ADMIN_CHAT_MODEL")
     if provider == "lmstudio" and local_model:
         model_name = local_model
     elif "|" in model_id:
-        provider, model_name = model_id.split("|")
-    
+        provider, model_name = model_id.split("|", 1)
+
     api_key = ""
     if provider == "openai": api_key = get_env_var("OPENAI_API_KEY")
     elif provider == "anthropic": api_key = get_env_var("CLAUDE_API_KEY")
     elif provider == "google": api_key = get_env_var("GEMINI_API_KEY")
     elif provider == "lmstudio": api_key = get_env_var("LMSTUDIO_API_KEY", "")
+    elif provider == "openai_compatible": api_key = get_env_var("OPENAI_COMPATIBLE_API_KEY", "")
+    elif provider == "ollama": api_key = ""
+
+    registry_choice = resolve_chat_model_from_registry(admin_mode)
+    if registry_choice:
+        provider = registry_choice["provider"]
+        model_name = registry_choice["model_name"]
+        api_key = registry_choice["api_key"]
 
     from llm_client import generate_chapter_text
 
@@ -1884,7 +2526,22 @@ def api_chat(cap_id):
             s_prompt = prompts.get("chat_step5_synthesis_prompt", "In base al ragionamento precedente, rispondi all'autore.")
             s_history = analysis_history + [{"role": "assistant", "content": reasoning_plan}, {"role": "user", "content": s_prompt}]
             reply = generate_chapter_text("", provider, model_name, api_key, max_tokens=2000, messages=s_history)
-            return jsonify({"reply": reply})
+            spoiler_audit = {"status": "skipped", "violations": []}
+            rewritten = False
+            if not admin_mode:
+                safe_result = enforce_reader_safety(reply, cap_id, get_all())
+                reply = safe_result["reply"]
+                spoiler_audit = safe_result["audit"]
+                rewritten = safe_result["rewritten"]
+                log_spoiler_audit_event(session_key, cap_id, spoiler_audit, rewritten)
+
+            return jsonify({
+                "reply": reply,
+                "session_key": session_key,
+                "memory": memory_snapshot,
+                "spoiler_audit": spoiler_audit,
+                "rewritten_for_safety": rewritten,
+            })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -1892,20 +2549,66 @@ def api_chat(cap_id):
     def generate():
         import re
         from ai_orchestrator import run_orchestrator_stream
+        synthesis_chunks = []
         
         try:
+            yield f"data: {json.dumps({'stage': 'context', 'content': f'Sessione: {session_key}'})}\n\n"
             generator = run_orchestrator_stream(
                 cap_id, provider, model_name, api_key, user_msg, admin_mode, prompts,
                 get_all, get_full_canon, get_conn, read_txt, get_character_context
             )
             for chunk_sse in generator:
+                payload = parse_sse_payload(chunk_sse)
+                if payload and payload.get("stage") == "synthesis":
+                    part = payload.get("content", "")
+                    if isinstance(part, str) and part:
+                        synthesis_chunks.append(part)
                 yield chunk_sse
-                
+
+            if not admin_mode and synthesis_chunks:
+                full_reply = "".join(synthesis_chunks).strip()
+                safe_result = enforce_reader_safety(full_reply, cap_id, get_all())
+                if safe_result["audit"]["status"] == "unsafe":
+                    log_spoiler_audit_event(session_key, cap_id, safe_result["audit"], True)
+                    yield f"data: {json.dumps({'stage': 'context', 'content': '🛡️ Spoiler audit: risposta riformulata in modalità sicura.'})}\n\n"
+                    yield f"data: {json.dumps({'stage': 'synthesis', 'content': safe_result['reply']})}\n\n"
+                else:
+                    log_spoiler_audit_event(session_key, cap_id, safe_result["audit"], False)
+
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
     from flask import Response
     return Response(generate(), mimetype='text/event-stream')
+
+
+@app.route("/api/chat/spoiler-audit", methods=["POST"])
+@login_required
+def api_chat_spoiler_audit():
+    data = request.json or {}
+    reply = data.get("reply", "")
+    cap_id = int(data.get("cap_id", 0) or 0)
+    if cap_id <= 0:
+        return jsonify({"status": "error", "message": "cap_id mancante o non valido"}), 400
+
+    result = enforce_reader_safety(reply, cap_id, get_all())
+    session_key = (data.get("session_key") or "").strip()
+    if session_key:
+        log_spoiler_audit_event(session_key, cap_id, result["audit"], result["rewritten"])
+    return jsonify({"status": "success", **result})
+
+@app.route("/api/chat/memory")
+@login_required
+def api_chat_memory():
+    session_key = (request.args.get("session_key") or "").strip()
+    if not session_key:
+        return jsonify({"status": "error", "message": "session_key mancante"}), 400
+    conn = get_conn()
+    try:
+        memory = load_session_memory(conn, session_key)
+        return jsonify({"status": "success", "session_key": session_key, "memory": memory})
+    finally:
+        conn.close()
 
 @app.route("/settings", methods=["GET", "POST"])
 @login_required

@@ -194,6 +194,43 @@ def call_lmstudio_chat(messages, base_url, model, max_tokens=4000, api_key=None)
     data = response.json()
     return data['choices'][0]['message']['content']
 
+
+
+def call_openai_compatible_chat(messages, base_url, model, max_tokens=4000, api_key=None):
+    url = f"{base_url.rstrip('/')}/v1/chat/completions"
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    payload = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": 0.7,
+    }
+    response = requests.post(url, headers=headers, json=payload, timeout=180)
+    response.raise_for_status()
+    data = response.json()
+    return data['choices'][0]['message']['content']
+
+
+def call_ollama_chat(messages, base_url, model, max_tokens=4000):
+    url = f"{base_url.rstrip('/')}/api/chat"
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "num_predict": max_tokens,
+            "temperature": 0.7,
+        },
+    }
+    response = requests.post(url, json=payload, timeout=300)
+    response.raise_for_status()
+    data = response.json()
+    if 'message' in data and isinstance(data['message'], dict):
+        return data['message'].get('content', '')
+    return str(data)
+
 def get_lmstudio_models(base_url, api_key=None):
     url = f"{base_url}/v1/models"
     headers = {}
@@ -221,6 +258,10 @@ def generate_content(prompt, model_name, max_tokens=2000, system=None):
         provider = "anthropic"
     elif "gemini" in model_name:
         provider = "google"
+    elif "ollama" in model_name:
+        provider = "ollama"
+    elif "openai-compatible" in model_name or "openai_compatible" in model_name:
+        provider = "openai_compatible"
     else:
         # Tenta di usare il provider di default
         provider = os.getenv("LLM_PROVIDER", "openai")
@@ -230,6 +271,8 @@ def generate_content(prompt, model_name, max_tokens=2000, system=None):
     elif provider == "anthropic": api_key = os.getenv("CLAUDE_API_KEY")
     elif provider == "google": api_key = os.getenv("GEMINI_API_KEY")
     elif provider == "lmstudio": api_key = os.getenv("LMSTUDIO_API_KEY", "")
+    elif provider == "openai_compatible": api_key = os.getenv("OPENAI_COMPATIBLE_API_KEY", "")
+    elif provider == "ollama": api_key = ""
     
     return generate_chapter_text(prompt, provider, model_name, api_key, system=system, max_tokens=max_tokens)
 
@@ -262,6 +305,22 @@ def generate_chapter_text(prompt, provider, model, api_key, system=None, max_tok
                 return call_lmstudio_chat(messages, base_url, model, max_tokens=max_tokens, api_key=api_key)
             else:
                 return call_lmstudio(prompt, base_url, model, system=system, max_tokens=max_tokens, api_key=api_key)
+        elif provider == "openai_compatible":
+            base_url = os.getenv("OPENAI_COMPATIBLE_URL", "").strip()
+            if not base_url:
+                raise ValueError("OPENAI_COMPATIBLE_URL non impostato.")
+            final_messages = messages if messages else [
+                {"role": "system", "content": system or "Sei un assistente narrativo."},
+                {"role": "user", "content": prompt},
+            ]
+            return call_openai_compatible_chat(final_messages, base_url, model, max_tokens=max_tokens, api_key=api_key)
+        elif provider == "ollama":
+            base_url = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+            final_messages = messages if messages else [
+                {"role": "system", "content": system or "Sei un assistente narrativo."},
+                {"role": "user", "content": prompt},
+            ]
+            return call_ollama_chat(final_messages, base_url, model, max_tokens=max_tokens)
         else:
             raise ValueError(f"Provider {provider} non supportato.")
     except requests.exceptions.HTTPError as e:

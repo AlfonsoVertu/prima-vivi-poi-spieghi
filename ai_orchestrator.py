@@ -117,15 +117,15 @@ def run_orchestrator_stream(
     yield f"data: {json.dumps({'stage': 'context', 'content': '🌀 Orchestratore attivo — avvio ricerca...'})}\n\n"
 
     caps = f_get_all()
-    canon = f_get_full_canon()
 
     sys_instr = prompts.get("system_instruction", "")
     if not admin_mode:
         sys_instr += (
-            f"\n\n[[CONTESTO_ARCHIVIO_SPOILER_FREE]]:\n{canon}"
-            f"\n\nATTENZIONE: Stai parlando con un LETTORE al Capitolo {cap_id}. NON svelare nulla del futuro."
+            f"\n\n[[POLITICA_LETTORE]]:\n"
+            f"Il lettore è fermo al Capitolo {cap_id}. È vietato usare conoscenza da capitoli futuri o dal canone globale."
         )
     else:
+        canon = f_get_full_canon()
         sys_instr += f"\n\n[[CANONE_DEFINITIVO]]:\n{canon}"
 
     meta_table = "### STRUTTURA OPERA (ToC)\n"

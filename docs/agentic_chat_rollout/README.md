@@ -36,12 +36,14 @@ Implementato finora:
 - `provider_discovery.py` con discovery/test per LM Studio, Ollama e OpenAI-compatible;
 - endpoint Flask `/api/agents`, `/api/agents/bootstrap`, `/api/agents/save`, `/api/agents/validate`, `/api/agents/export`, `/api/agents/import`, `/api/agents/<agent_key>`, `/api/agents/<agent_key>/enabled`, `/api/provider-endpoints/save`, `/api/provider-endpoints/<endpoint_key>`, `/api/provider-endpoints/discover`, `/api/provider-endpoints/test`, `/api/provider-endpoints/discovery-cache`, `/api/agentic/readiness`, `/api/agentic/bootstrap-full`, `/api/agents/test`, `/api/ollama/discover`, `/api/ollama/test`, `/api/openai-compatible/discover`, `/api/openai-compatible/test`, `/api/chat/memory`, `/api/chat/spoiler-audit`, `/api/chat/tools` (anche `detailed=1`), `/api/chat/tools/execute`, `/api/chat/tool-runs` e uso di `history` + memory snapshot persistito nella chat API con logging safety/tool su `chat_tool_runs`.
 - test smoke automatizzati iniziali in `tests/test_agentic_backend.py` per registry + tool executor.
+- mappa operativa completa endpoint→codice→controlli in `04_mappa_codice_operativa.md`.
 
 ## File operativi inclusi
 
 - `01_fase1_hardening_operativo.md`
 - `02_fase2_registry_tool_ui.md`
 - `03_fase3_vector_db_mcp.md`
+- `04_mappa_codice_operativa.md`
 - `PROGRESS.md` (avanzamento percentuale aggiornato)
 - `sqlite/001_agentic_chat_foundation.sql`
 - `sqlite/002_agentic_chat_indexes.sql`

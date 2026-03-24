@@ -67,6 +67,7 @@ L'applicazione sarà disponibile su `http://localhost:5000`.
 Avanzamento operativo corrente: vedi `docs/agentic_chat_rollout/PROGRESS.md` (aggiornato in percentuale).
 Per smoke test backend agentico è disponibile anche `tests/test_agentic_backend.py`.
 Fase 3 (Vector/MCP) può essere avviata dopo il go-live: Fase 1+2 ora coprono la partenza operativa del progetto.
+Per manutenzione evolutiva, leggere `docs/agentic_chat_rollout/04_mappa_codice_operativa.md` (mappa completa endpoint→codice→controlli).
 
 ## Variabili d'Ambiente (.env)
 

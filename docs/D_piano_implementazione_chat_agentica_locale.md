@@ -15,6 +15,7 @@ Il piano qui proposto è ancorato all'implementazione reale del repository:
 ## Stato implementativo corrente
 
 Per un tracking operativo quantitativo dell'avanzamento, vedi anche `docs/agentic_chat_rollout/PROGRESS.md`.
+Per la mappa manutentiva dettagliata endpoint/codice/controlli, vedi `docs/agentic_chat_rollout/04_mappa_codice_operativa.md`.
 
 
 Oltre alla documentazione, il repository contiene ora una prima foundation concreta per la roadmap:

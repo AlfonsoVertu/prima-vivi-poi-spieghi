@@ -76,6 +76,7 @@ Dal pannello si può selezionare un agente, scegliere il provider e visualizzare
 - Aggiunte API di readiness/boot completo (`/api/agentic/readiness`, `/api/agentic/bootstrap-full`) per checklist go-live Fase 1+2.
 - Tool coperti: retrieval principali + `list_chapters_range` + audit con `get_recent_tool_runs` + `update_chapter_fields` (anche `dry_run`) in admin mode.
 - Aggiunta base test automatizzata (`tests/test_agentic_backend.py`) per smoke/regressione su registry + tool executor.
+- Aggiunta mappa operativa completa per manutenzione (`04_mappa_codice_operativa.md`) con checklist pre-modifica e invarianti da preservare.
 
 
 ### Obiettivo

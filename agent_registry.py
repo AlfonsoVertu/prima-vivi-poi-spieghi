@@ -97,6 +97,53 @@ SCHEMA_STATEMENTS = [
         UNIQUE(endpoint_id)
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS mcp_bridge_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token_id TEXT NOT NULL UNIQUE,
+        token_hash TEXT NOT NULL UNIQUE,
+        label TEXT DEFAULT '',
+        tenant_id TEXT DEFAULT 'default',
+        scope TEXT NOT NULL DEFAULT 'both' CHECK(scope IN ('reader','author','both')),
+        max_cap_id INTEGER,
+        rate_limit_per_minute INTEGER NOT NULL DEFAULT 60,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        policy_json TEXT DEFAULT '{}',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS mcp_bridge_rate_limits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token_id TEXT NOT NULL,
+        client_key TEXT NOT NULL,
+        window_minute INTEGER NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(token_id, client_key, window_minute)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS mcp_bridge_audit (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token_id TEXT DEFAULT '',
+        tenant_id TEXT DEFAULT '',
+        client_key TEXT DEFAULT '',
+        endpoint TEXT NOT NULL,
+        mode TEXT DEFAULT '',
+        cap_id INTEGER,
+        query_len INTEGER DEFAULT 0,
+        k INTEGER,
+        min_score REAL,
+        status TEXT NOT NULL,
+        result_count INTEGER DEFAULT 0,
+        error_message TEXT DEFAULT '',
+        latency_ms INTEGER DEFAULT 0,
+        meta_json TEXT DEFAULT '{}',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """,
 ]
 
 INDEX_STATEMENTS = [
@@ -106,6 +153,9 @@ INDEX_STATEMENTS = [
     "CREATE INDEX IF NOT EXISTS idx_chat_sessions_mode_cap ON chat_sessions(mode, cap_id)",
     "CREATE INDEX IF NOT EXISTS idx_chat_tool_runs_session_created ON chat_tool_runs(session_id, created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_provider_discovery_cache_endpoint ON provider_discovery_cache(endpoint_id)",
+    "CREATE INDEX IF NOT EXISTS idx_mcp_bridge_tokens_enabled_scope ON mcp_bridge_tokens(enabled, scope)",
+    "CREATE INDEX IF NOT EXISTS idx_mcp_bridge_rate_limits_lookup ON mcp_bridge_rate_limits(token_id, client_key, window_minute)",
+    "CREATE INDEX IF NOT EXISTS idx_mcp_bridge_audit_created ON mcp_bridge_audit(created_at DESC)",
 ]
 
 DEFAULT_ENDPOINTS = [

@@ -28,13 +28,23 @@ Queste tabelle coprono già la maggior parte del retrieval strutturato necessari
 
 ## Stato avanzamento del repository
 
-Questa cartella ora non è più solo pianificazione: nel codice sono già stati introdotti i primi mattoni di foundation per la Fase 2.
+Questa cartella ora non è più solo pianificazione: nel codice sono implementate Fase 1, Fase 2 e gran parte di Fase 3 (foundation + hardening MCP iniziale).
 
 Implementato finora:
 
 - `agent_registry.py` con schema runtime e seed di agenti/endpoints di default;
 - `provider_discovery.py` con discovery/test per LM Studio, Ollama e OpenAI-compatible;
 - endpoint Flask `/api/agents`, `/api/agents/bootstrap`, `/api/agents/save`, `/api/agents/validate`, `/api/agents/export`, `/api/agents/import`, `/api/agents/<agent_key>`, `/api/agents/<agent_key>/enabled`, `/api/provider-endpoints/save`, `/api/provider-endpoints/<endpoint_key>`, `/api/provider-endpoints/discover`, `/api/provider-endpoints/test`, `/api/provider-endpoints/discovery-cache`, `/api/agentic/readiness`, `/api/agentic/bootstrap-full`, `/api/agents/test`, `/api/ollama/discover`, `/api/ollama/test`, `/api/openai-compatible/discover`, `/api/openai-compatible/test`, `/api/chat/memory`, `/api/chat/spoiler-audit`, `/api/chat/tools` (anche `detailed=1`), `/api/chat/tools/execute`, `/api/chat/tool-runs` e uso di `history` + memory snapshot persistito nella chat API con logging safety/tool su `chat_tool_runs`.
+- runtime multi-role `/api/chat/<cap_id>` con tool-plan automatico, forcing retrieval vettoriale e grounding evidenze (`sources_used`, `include_sources=true`).
+- vector index locale con endpoint `/api/vector-index/stats`, `/api/vector-index/versions`, `/api/vector-index/rebuild`, `/api/vector-index/search`.
+- refresh incrementale indice con endpoint `/api/vector-index/refresh` (`cap_ids` selettivo).
+- MCP bridge `/api/mcp/*` con:
+  - auth bearer policy-based (`mcp_bridge_tokens`),
+  - rate-limit persistente SQLite (`mcp_bridge_rate_limits`),
+  - audit avanzato (`mcp_bridge_audit`),
+  - endpoint meta (`/api/mcp/health`, `/api/mcp/capabilities`, `/api/mcp/list_vector_index_versions`),
+  - analytics/cleanup audit (`/api/mcp/audit/analytics`, `/api/mcp/audit/cleanup`),
+  - CRUD token + rotate (`/api/mcp/tokens*`) integrato anche in UI settings.
 - test smoke automatizzati iniziali in `tests/test_agentic_backend.py` per registry + tool executor.
 - mappa operativa completa endpoint→codice→controlli in `04_mappa_codice_operativa.md`.
 
@@ -53,6 +63,22 @@ Implementato finora:
 1. Eseguire Fase 1 per blindare spoiler, memoria e routing.
 2. Introdurre registry agenti, provider discovery e tool execution della Fase 2.
 3. Solo dopo stabilizzare indicizzazione locale, vector DB e MCP nella Fase 3.
+
+## Runbook locale rapido (definitivo)
+
+1. Avvio applicazione:
+   - `python app.py`
+2. Verifica base backend:
+   - `python -m py_compile app.py agent_registry.py vector_index_local.py tests/test_agentic_backend.py`
+   - `python -m pytest tests/test_agentic_backend.py -q`
+3. Rebuild indice vettoriale (autenticato admin):
+   - `POST /api/vector-index/rebuild`
+   - `POST /api/vector-index/refresh` (delta su capitoli selezionati)
+4. Smoke MCP:
+   - `GET /api/mcp/health`
+   - `GET /api/mcp/capabilities`
+   - `POST /api/mcp/vector-search` con bearer token e payload valido.
+   - `GET /api/mcp/audit/analytics?days=7`
 
 ## Regola pratica
 

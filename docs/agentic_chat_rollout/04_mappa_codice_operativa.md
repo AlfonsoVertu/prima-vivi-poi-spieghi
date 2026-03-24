@@ -15,7 +15,8 @@ Questo documento è la reference operativa per capire **dove** è implementato o
   - risoluzione agent/model runtime dal registry;
   - chiamata tool executor e logging `chat_tool_runs`;
   - iniezione history/memory;
-  - enforcement safety reader post-sintesi.
+  - enforcement safety reader post-sintesi;
+  - bridge MCP con policy token/rate-limit/audit persistenti.
 
 **Attenzione**
 - Modifiche qui hanno impatto trasversale (auth, DB, safety, UX API).
@@ -33,6 +34,9 @@ Questo documento è la reference operativa per capire **dove** è implementato o
   - `chat_session_memory`
   - `chat_tool_runs`
   - `provider_discovery_cache`
+  - `mcp_bridge_tokens`
+  - `mcp_bridge_rate_limits`
+  - `mcp_bridge_audit`
 - Gestisce seed, CRUD, validazioni, import/export bundle, readiness report.
 
 **Attenzione**
@@ -126,6 +130,31 @@ Controlli chiave:
 - audit spoiler non-stream + streaming;
 - fallback safe in caso di output non conforme.
 
+## 2.5 Vector/MCP
+- `GET /api/vector-index/stats`
+- `GET /api/vector-index/versions`
+- `POST /api/vector-index/rebuild`
+- `POST /api/vector-index/refresh`
+- `GET /api/vector-index/search`
+- `GET /api/mcp/health`
+- `GET /api/mcp/capabilities`
+- `GET /api/mcp/list_vector_index_versions`
+- `POST /api/mcp/vector-search`
+- `GET /api/mcp/tokens`
+- `POST /api/mcp/tokens/save`
+- `POST /api/mcp/tokens/<token_id>/rotate`
+- `POST /api/mcp/tokens/<token_id>/enabled`
+- `DELETE /api/mcp/tokens/<token_id>`
+- `GET /api/mcp/audit/analytics`
+- `POST /api/mcp/audit/cleanup`
+
+Controlli chiave:
+- `mode=reader` con `cap_id` obbligatorio;
+- policy token MCP (`scope`, `tenant_id`, `max_cap_id`, `rate_limit_per_minute`);
+- rate-limit persistente SQLite (`mcp_bridge_rate_limits`);
+- audit strutturato (`mcp_bridge_audit`) per esito/latency/client/token.
+- delta indexing per capitoli specifici (riduce costo rebuild totale).
+
 ---
 
 ## 3) Regole invarianti (da NON rompere)
@@ -160,7 +189,7 @@ Prima di modificare:
 
 Dopo modifica:
 1. `python -m py_compile ...`
-2. `python -m unittest tests/test_agentic_backend.py`
+2. `python -m pytest tests/test_agentic_backend.py -q`
 3. Verifica percentuali/progresso se cambia la maturità fase.
 
 ---

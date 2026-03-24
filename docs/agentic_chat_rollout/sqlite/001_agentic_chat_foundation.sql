@@ -78,3 +78,55 @@ CREATE TABLE IF NOT EXISTS chat_tool_runs (
     duration_ms INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS provider_discovery_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    endpoint_id INTEGER NOT NULL REFERENCES provider_endpoints(id) ON DELETE CASCADE,
+    models_json TEXT DEFAULT '[]',
+    discovered_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(endpoint_id)
+);
+
+CREATE TABLE IF NOT EXISTS mcp_bridge_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_id TEXT NOT NULL UNIQUE,
+    token_hash TEXT NOT NULL UNIQUE,
+    label TEXT DEFAULT '',
+    tenant_id TEXT DEFAULT 'default',
+    scope TEXT NOT NULL DEFAULT 'both' CHECK(scope IN ('reader','author','both')),
+    max_cap_id INTEGER,
+    rate_limit_per_minute INTEGER NOT NULL DEFAULT 60,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    policy_json TEXT DEFAULT '{}',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS mcp_bridge_rate_limits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_id TEXT NOT NULL,
+    client_key TEXT NOT NULL,
+    window_minute INTEGER NOT NULL,
+    count INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(token_id, client_key, window_minute)
+);
+
+CREATE TABLE IF NOT EXISTS mcp_bridge_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_id TEXT DEFAULT '',
+    tenant_id TEXT DEFAULT '',
+    client_key TEXT DEFAULT '',
+    endpoint TEXT NOT NULL,
+    mode TEXT DEFAULT '',
+    cap_id INTEGER,
+    query_len INTEGER DEFAULT 0,
+    k INTEGER,
+    min_score REAL,
+    status TEXT NOT NULL,
+    result_count INTEGER DEFAULT 0,
+    error_message TEXT DEFAULT '',
+    latency_ms INTEGER DEFAULT 0,
+    meta_json TEXT DEFAULT '{}',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

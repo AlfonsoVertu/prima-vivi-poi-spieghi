@@ -5,6 +5,7 @@ Avvio: python app.py  →  http://localhost:5000
 from flask import Flask, render_template_string, request, redirect, url_for, jsonify, send_file, session
 import sqlite3, os, json, io, zipfile, logging, re
 import time
+import hashlib
 from functools import wraps
 from dotenv import load_dotenv
 
@@ -14,7 +15,8 @@ from agent_registry import ensure_schema as ensure_agent_registry_schema, list_a
 from provider_discovery import discover_models as provider_discover_models, test_provider as provider_test_provider
 from chat_memory import upsert_session_memory, load_session_memory
 from spoiler_guard import enforce_reader_safety
-from chat_tools import execute_tool as chat_execute_tool, available_tools as chat_available_tools, available_tools_catalog as chat_available_tools_catalog
+from chat_tools import execute_tool as chat_execute_tool, available_tools as chat_available_tools, available_tools_catalog as chat_available_tools_catalog, execute_tool_plan as chat_execute_tool_plan, normalize_tool_plan as chat_normalize_tool_plan
+from vector_index_local import ensure_schema as ensure_vector_schema, rebuild_index as vector_rebuild_index, index_stats as vector_index_stats, search_index as vector_search_index, list_index_versions as vector_list_index_versions, refresh_index_for_chapters as vector_refresh_index_for_chapters
 from compila_iterativo import build_prompt
 import requests, base64
 from datetime import datetime
@@ -384,7 +386,6 @@ def ensure_agent_registry_ready():
         conn.close()
 
 ensure_agent_registry_ready()
-
 def resolve_chat_model_from_registry(admin_mode):
     role_key = "AnswerSynthesizer" if admin_mode else "ReaderAnswerer"
     mode = "author" if admin_mode else "reader"
@@ -423,6 +424,441 @@ def resolve_chat_model_from_registry(admin_mode):
             "provider_type": provider,
             "model_id": model_name,
         },
+    }
+
+
+def _agent_prompt_text(agent, prompt_kind, default_text=""):
+    prompts = agent.get("prompts") or []
+    if isinstance(prompts, dict):
+        val = (prompts.get(prompt_kind) or "").strip()
+        return val or default_text
+    if isinstance(prompts, list):
+        for item in prompts:
+            if str(item.get("prompt_kind", "")).strip() == prompt_kind:
+                txt = (item.get("prompt_text") or "").strip()
+                if txt:
+                    return txt
+    return default_text
+
+
+def _apply_agent_endpoint_env(provider, endpoint_base_url):
+    if not endpoint_base_url:
+        return
+    if provider == "lmstudio":
+        set_env_var("LMSTUDIO_URL", endpoint_base_url)
+    elif provider == "openai_compatible":
+        set_env_var("OPENAI_COMPATIBLE_URL", endpoint_base_url)
+    elif provider == "ollama":
+        set_env_var("OLLAMA_URL", endpoint_base_url)
+
+
+def _agent_runtime_config(agent):
+    provider = (agent.get("provider_type") or "").strip()
+    model_name = (agent.get("model_id") or "").strip()
+    api_key_env = (agent.get("api_key_env") or "").strip()
+    endpoint_base_url = (agent.get("base_url") or "").strip()
+    api_key = get_env_var(api_key_env, "") if api_key_env else ""
+    _apply_agent_endpoint_env(provider, endpoint_base_url)
+    return {"provider": provider, "model_name": model_name, "api_key": api_key}
+
+
+def resolve_agents_for_mode(admin_mode):
+    mode = "author" if admin_mode else "reader"
+    required_roles = ["AuthorTaskRouter", "AnswerSynthesizer"] if admin_mode else ["ReaderAnswerer", "SpoilerJudge"]
+    conn = get_conn()
+    try:
+        resolved = {}
+        missing = []
+        for role_key in required_roles:
+            agent = registry_resolve_agent_for_role(conn, mode=mode, role_key=role_key)
+            if agent:
+                resolved[role_key] = agent
+            else:
+                missing.append(role_key)
+    finally:
+        conn.close()
+    return {"mode": mode, "required_roles": required_roles, "resolved": resolved, "missing": missing}
+
+
+def _extract_json_object(raw_text):
+    text = str(raw_text or "").strip()
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(0))
+    except Exception:
+        return None
+
+
+def _parse_agent_tool_scope(agent):
+    scope_raw = agent.get("tool_scope", "[]")
+    if isinstance(scope_raw, list):
+        return [str(x).strip() for x in scope_raw if str(x).strip()]
+    try:
+        parsed = json.loads(scope_raw or "[]")
+    except Exception:
+        parsed = []
+    if not isinstance(parsed, list):
+        return []
+    return [str(x).strip() for x in parsed if str(x).strip()]
+
+
+def _normalize_tool_plan_contract(raw_text):
+    parsed = _extract_json_object(raw_text)
+    if not isinstance(parsed, dict):
+        return {"ok": False, "error": "Output JSON mancante o non valido", "tool_plan": [], "parsed": {}}
+    tool_plan = parsed.get("tool_plan", [])
+    norm = chat_normalize_tool_plan(tool_plan)
+    if not norm.get("ok"):
+        return {"ok": False, "error": norm.get("error", "tool_plan non valido"), "tool_plan": [], "parsed": parsed}
+    return {"ok": True, "tool_plan": norm["plan"], "parsed": parsed}
+
+
+def _ensure_tool_session(conn, session_key, admin_mode, cap_id):
+    row = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+    if row:
+        return row["id"]
+    mode = "author" if admin_mode else "reader"
+    cur = conn.execute(
+        "INSERT OR IGNORE INTO chat_sessions (session_key, mode, cap_id, user_scope) VALUES (?, ?, ?, '')",
+        (session_key, mode, cap_id),
+    )
+    if cur.lastrowid:
+        return cur.lastrowid
+    row_retry = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+    return row_retry["id"] if row_retry else None
+
+
+def _execute_tool_plan_with_logging(conn, session_key, cap_id, admin_mode, agent, tool_plan, stop_on_error=True):
+    allowed_tools = _parse_agent_tool_scope(agent)
+    result = chat_execute_tool_plan(
+        conn,
+        tool_plan,
+        admin_mode=admin_mode,
+        allowed_tools=allowed_tools,
+        stop_on_error=stop_on_error,
+    )
+    session_id = _ensure_tool_session(conn, session_key, admin_mode, cap_id) if session_key else None
+    agent_id = agent.get("id")
+    for run in result.get("runs", []):
+        idx = max(0, int(run.get("index", 1)) - 1)
+        args = tool_plan[idx].get("arguments", {}) if idx < len(tool_plan) else {}
+        status = "ok" if run.get("status") == "ok" else ("blocked" if run.get("status") == "blocked" else "error")
+        conn.execute(
+            """
+            INSERT INTO chat_tool_runs (session_id, agent_id, tool_name, arguments_json, result_json, status, duration_ms)
+            VALUES (?, ?, ?, ?, ?, ?, 0)
+            """,
+            (
+                session_id,
+                agent_id,
+                run.get("tool", ""),
+                json.dumps(args, ensure_ascii=False),
+                json.dumps(run.get("result", {}), ensure_ascii=False),
+                status,
+            ),
+        )
+    conn.commit()
+    return result
+
+
+def _should_force_vector_lookup(user_msg):
+    text = (user_msg or "").lower()
+    if not text:
+        return False
+    keywords = [
+        "chi ", "chi è", "quando", "dove", "perché", "spiega", "riassunto",
+        "cosa succede", "timeline", "personaggio", "personaggi", "capitolo",
+        "coerenza", "analisi", "simbolo", "tema",
+    ]
+    return any(k in text for k in keywords)
+
+
+def _tool_plan_has_vector(plan, admin_mode):
+    target = "vector_search_author" if admin_mode else "vector_search_reader"
+    for step in (plan or []):
+        if str(step.get("tool", "")).strip() == target:
+            return True
+    return False
+
+
+def _forced_vector_step(user_msg, cap_id, admin_mode, k=6):
+    if admin_mode:
+        return {"tool": "vector_search_author", "arguments": {"query": user_msg, "k": k}}
+    return {"tool": "vector_search_reader", "arguments": {"query": user_msg, "cap_id": cap_id, "k": k}}
+
+
+def _run_direct_vector_fallback(conn, session_key, cap_id, admin_mode, agent, user_msg, k=6):
+    ensure_vector_schema(conn)
+    if admin_mode:
+        result = vector_search_index(conn, user_msg, k=k, max_cap_id=None)
+        tool_name = "vector_search_author"
+        args = {"query": user_msg, "k": k}
+    else:
+        result = vector_search_index(conn, user_msg, k=k, max_cap_id=cap_id)
+        tool_name = "vector_search_reader"
+        args = {"query": user_msg, "cap_id": cap_id, "k": k}
+    session_id = _ensure_tool_session(conn, session_key, admin_mode, cap_id) if session_key else None
+    conn.execute(
+        """
+        INSERT INTO chat_tool_runs (session_id, agent_id, tool_name, arguments_json, result_json, status, duration_ms)
+        VALUES (?, ?, ?, ?, ?, ?, 0)
+        """,
+        (
+            session_id,
+            agent.get("id") if agent else None,
+            tool_name,
+            json.dumps(args, ensure_ascii=False),
+            json.dumps(result, ensure_ascii=False),
+            "ok" if result.get("ok") else "error",
+        ),
+    )
+    conn.commit()
+    return result
+
+
+def _extract_evidence_refs(tool_result, max_items=8):
+    refs = []
+    for run in (tool_result or {}).get("runs", []):
+        res = run.get("result") or {}
+        if not isinstance(res, dict):
+            continue
+        for item in res.get("results", []) or []:
+            if not isinstance(item, dict):
+                continue
+            cap_id = item.get("cap_id")
+            chunk_no = item.get("chunk_no")
+            score = item.get("score")
+            if cap_id is None or chunk_no is None:
+                continue
+            refs.append({
+                "cap_id": cap_id,
+                "chunk_no": chunk_no,
+                "score": score,
+            })
+            if len(refs) >= max_items:
+                return refs
+    return refs
+
+
+def _mcp_token_sha(token):
+    return hashlib.sha256((token or "").encode("utf-8")).hexdigest()
+
+
+def _sync_mcp_tokens_from_env(conn):
+    raw = (get_env_var("MCP_BRIDGE_TOKENS_JSON", "") or "").strip()
+    if not raw:
+        return
+    try:
+        items = json.loads(raw)
+    except Exception:
+        return
+    if not isinstance(items, list):
+        return
+    for idx, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            continue
+        plain = str(item.get("token") or "").strip()
+        if not plain:
+            continue
+        token_id = str(item.get("token_id") or f"env-token-{idx}").strip()
+        scope = str(item.get("scope") or "both").strip().lower()
+        if scope not in {"reader", "author", "both"}:
+            scope = "both"
+        max_cap_id = item.get("max_cap_id")
+        try:
+            max_cap_id = int(max_cap_id) if max_cap_id is not None else None
+            if max_cap_id is not None and max_cap_id <= 0:
+                max_cap_id = None
+        except Exception:
+            max_cap_id = None
+        try:
+            rpm = max(1, min(int(item.get("rate_limit_per_minute", 60) or 60), 600))
+        except Exception:
+            rpm = 60
+        enabled = 1 if bool(item.get("enabled", True)) else 0
+        conn.execute(
+            """
+            INSERT INTO mcp_bridge_tokens
+                (token_id, token_hash, label, tenant_id, scope, max_cap_id, rate_limit_per_minute, enabled, policy_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(token_id) DO UPDATE SET
+                token_hash=excluded.token_hash,
+                label=excluded.label,
+                tenant_id=excluded.tenant_id,
+                scope=excluded.scope,
+                max_cap_id=excluded.max_cap_id,
+                rate_limit_per_minute=excluded.rate_limit_per_minute,
+                enabled=excluded.enabled,
+                policy_json=excluded.policy_json,
+                updated_at=CURRENT_TIMESTAMP
+            """,
+            (
+                token_id,
+                _mcp_token_sha(plain),
+                str(item.get("label") or token_id),
+                str(item.get("tenant_id") or "default"),
+                scope,
+                max_cap_id,
+                rpm,
+                enabled,
+                json.dumps(item.get("policy", {}), ensure_ascii=False),
+            ),
+        )
+    conn.commit()
+
+
+def _mcp_resolve_policy(conn, req):
+    auth = (req.headers.get("Authorization") or "").strip()
+    if not auth.lower().startswith("bearer "):
+        return None
+    token = auth[7:].strip()
+    if not token:
+        return None
+    _sync_mcp_tokens_from_env(conn)
+    row = conn.execute(
+        """
+        SELECT token_id, tenant_id, scope, max_cap_id, rate_limit_per_minute, enabled, policy_json
+        FROM mcp_bridge_tokens
+        WHERE token_hash=? AND enabled=1
+        LIMIT 1
+        """,
+        (_mcp_token_sha(token),),
+    ).fetchone()
+    if row:
+        try:
+            policy_extra = json.loads(row["policy_json"] or "{}")
+        except Exception:
+            policy_extra = {}
+        return {
+            "token_id": row["token_id"],
+            "tenant_id": row["tenant_id"] or "default",
+            "scope": row["scope"] or "both",
+            "max_cap_id": row["max_cap_id"],
+            "rate_limit_per_minute": int(row["rate_limit_per_minute"] or 60),
+            "policy": policy_extra,
+        }
+    fallback = get_env_var("MCP_BRIDGE_TOKEN", "").strip() or get_env_var("API_TOKEN", "").strip()
+    if fallback and token == fallback:
+        try:
+            fallback_rpm = max(1, min(int(get_env_var("MCP_BRIDGE_RATE_LIMIT_PER_MINUTE", "60") or 60), 600))
+        except Exception:
+            fallback_rpm = 60
+        return {
+            "token_id": "env-default",
+            "tenant_id": "default",
+            "scope": "both",
+            "max_cap_id": None,
+            "rate_limit_per_minute": fallback_rpm,
+            "policy": {"source": "env_fallback"},
+        }
+    return None
+
+
+def _mcp_rate_limit_ok(conn, token_id, client_key, per_minute=60):
+    window = int(time.time()) // 60
+    row = conn.execute(
+        """
+        SELECT id, count
+        FROM mcp_bridge_rate_limits
+        WHERE token_id=? AND client_key=? AND window_minute=?
+        LIMIT 1
+        """,
+        (token_id, client_key, window),
+    ).fetchone()
+    if not row:
+        conn.execute(
+            """
+            INSERT INTO mcp_bridge_rate_limits (token_id, client_key, window_minute, count)
+            VALUES (?, ?, ?, 1)
+            """,
+            (token_id, client_key, window),
+        )
+        conn.commit()
+        return True
+    current = int(row["count"] or 0)
+    if current >= int(per_minute):
+        return False
+    conn.execute(
+        "UPDATE mcp_bridge_rate_limits SET count=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        (current + 1, row["id"]),
+    )
+    conn.commit()
+    return True
+
+
+def _mcp_policy_allows_mode(policy, mode):
+    scope = (policy or {}).get("scope", "both")
+    if scope == "both":
+        return True
+    return scope == mode
+
+
+def _mcp_policy_allows_cap(policy, mode, cap_id):
+    if mode != "reader":
+        return True
+    max_cap_id = (policy or {}).get("max_cap_id")
+    if max_cap_id is None:
+        return True
+    try:
+        return int(cap_id or 0) <= int(max_cap_id)
+    except Exception:
+        return False
+
+
+def _mcp_audit_log(conn, **kwargs):
+    conn.execute(
+        """
+        INSERT INTO mcp_bridge_audit
+            (token_id, tenant_id, client_key, endpoint, mode, cap_id, query_len, k, min_score, status, result_count, error_message, latency_ms, meta_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            kwargs.get("token_id", ""),
+            kwargs.get("tenant_id", ""),
+            kwargs.get("client_key", ""),
+            kwargs.get("endpoint", ""),
+            kwargs.get("mode", ""),
+            kwargs.get("cap_id"),
+            int(kwargs.get("query_len", 0) or 0),
+            kwargs.get("k"),
+            kwargs.get("min_score"),
+            kwargs.get("status", "error"),
+            int(kwargs.get("result_count", 0) or 0),
+            kwargs.get("error_message", ""),
+            int(kwargs.get("latency_ms", 0) or 0),
+            json.dumps(kwargs.get("meta", {}), ensure_ascii=False),
+        ),
+    )
+    conn.commit()
+
+
+def _mcp_public_token_row(row):
+    if not row:
+        return None
+    policy = {}
+    try:
+        policy = json.loads(row["policy_json"] or "{}")
+    except Exception:
+        policy = {}
+    return {
+        "token_id": row["token_id"],
+        "label": row["label"] or "",
+        "tenant_id": row["tenant_id"] or "default",
+        "scope": row["scope"] or "both",
+        "max_cap_id": row["max_cap_id"],
+        "rate_limit_per_minute": int(row["rate_limit_per_minute"] or 60),
+        "enabled": bool(row["enabled"]),
+        "policy": policy if isinstance(policy, dict) else {},
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
     }
 
 
@@ -2458,6 +2894,84 @@ def api_chat_tool_runs():
         conn.close()
 
 
+@app.route("/api/chat/tools/plan", methods=["POST"])
+@login_required
+def api_chat_tools_plan():
+    data = request.json or {}
+    admin_mode = bool(data.get("admin_mode", False))
+    session_key = (data.get("session_key") or "").strip()
+    allowed_tools = data.get("allowed_tools") if isinstance(data.get("allowed_tools"), list) else []
+    stop_on_error = bool(data.get("stop_on_error", False))
+    dry_run = bool(data.get("dry_run", False))
+    plan = data.get("tool_plan")
+    agent_key = (data.get("agent_key") or "").strip()
+
+    normalized = chat_normalize_tool_plan(plan)
+    if not normalized.get("ok"):
+        return jsonify({"status": "error", "message": normalized.get("error", "tool_plan non valido")}), 400
+    if dry_run:
+        return jsonify({"status": "success", "dry_run": True, "normalized_plan": normalized["plan"]})
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        agent = None
+        if agent_key:
+            agent = registry_get_agent(conn, agent_key)
+            if not agent:
+                return jsonify({"status": "error", "message": f"Agente non trovato: {agent_key}"}), 404
+            scoped = _parse_agent_tool_scope(agent)
+            if scoped:
+                allowed_tools = scoped
+        started = time.perf_counter()
+        result = chat_execute_tool_plan(
+            conn,
+            normalized["plan"],
+            admin_mode=admin_mode,
+            allowed_tools=allowed_tools,
+            stop_on_error=stop_on_error,
+        )
+        duration_ms = int((time.perf_counter() - started) * 1000)
+
+        if session_key:
+            row = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+            session_id = row["id"] if row else None
+            if session_id is None:
+                mode = "author" if admin_mode else "reader"
+                cur = conn.execute(
+                    "INSERT OR IGNORE INTO chat_sessions (session_key, mode, cap_id, user_scope) VALUES (?, ?, NULL, '')",
+                    (session_key, mode),
+                )
+                if cur.lastrowid:
+                    session_id = cur.lastrowid
+                else:
+                    row_retry = conn.execute("SELECT id FROM chat_sessions WHERE session_key=?", (session_key,)).fetchone()
+                    session_id = row_retry["id"] if row_retry else None
+            for run in result.get("runs", []):
+                conn.execute(
+                    """
+                    INSERT INTO chat_tool_runs (session_id, agent_id, tool_name, arguments_json, result_json, status, duration_ms)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        session_id,
+                        agent.get("id") if agent else None,
+                        run.get("tool", ""),
+                        json.dumps((normalized["plan"][max(0, int(run.get("index", 1)) - 1)].get("arguments", {})), ensure_ascii=False),
+                        json.dumps(run.get("result", {}), ensure_ascii=False),
+                        "ok" if run.get("status") == "ok" else ("blocked" if run.get("status") == "blocked" else "error"),
+                        duration_ms,
+                    ),
+                )
+            conn.commit()
+
+        status = "success" if result.get("ok") else "error"
+        code = 200 if result.get("ok") else 400
+        return jsonify({"status": status, "result": result}), code
+    finally:
+        conn.close()
+
+
 @app.route("/api/chat/<int:cap_id>", methods=["POST"])
 def api_chat(cap_id):
     data = request.json
@@ -2487,6 +3001,7 @@ def api_chat(cap_id):
         user_msg += "\n\n[MEMORIA_SESSIONE] Domande aperte: " + " | ".join(persisted_memory["open_questions"][:3])
 
     should_stream = data.get("stream", True) # Default to stream now
+    include_sources = bool(data.get("include_sources", admin_mode))
     
     ui = load_ui_settings()
     prompts = load_prompts()
@@ -2509,30 +3024,220 @@ def api_chat(cap_id):
     elif provider == "openai_compatible": api_key = get_env_var("OPENAI_COMPATIBLE_API_KEY", "")
     elif provider == "ollama": api_key = ""
 
-    registry_choice = resolve_chat_model_from_registry(admin_mode)
-    if registry_choice:
-        provider = registry_choice["provider"]
-        model_name = registry_choice["model_name"]
-        api_key = registry_choice["api_key"]
+    phase1_enabled = str(get_env_var("AGENTIC_MULTIROLE_ENABLED", "true")).strip().lower() in {"1", "true", "yes", "on"}
+    roles_bundle = resolve_agents_for_mode(admin_mode) if phase1_enabled else {"resolved": {}, "missing": [], "required_roles": []}
+    roles = roles_bundle.get("resolved", {})
+    missing_roles = roles_bundle.get("missing", [])
+    multirole_ready = phase1_enabled and (len(missing_roles) == 0)
+
+    fallback_choice = resolve_chat_model_from_registry(admin_mode)
+    if fallback_choice:
+        provider = fallback_choice["provider"]
+        model_name = fallback_choice["model_name"]
+        api_key = fallback_choice["api_key"]
+
+    if phase1_enabled and missing_roles:
+        app.logger.warning("AGENTIC_MULTIROLE fallback: ruoli mancanti in mode=%s -> %s", "author" if admin_mode else "reader", ",".join(missing_roles))
 
     from llm_client import generate_chapter_text
 
+    def run_multirole_phase1():
+        analysis_history = run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=user_msg, admin_mode=admin_mode)
+        debug = {
+            "multirole": True,
+            "mode": "author" if admin_mode else "reader",
+            "roles": sorted(list(roles.keys())),
+            "tool_contracts": {},
+            "tool_runs": [],
+            "forced_vector_policy": False,
+        }
+        conn_tools = get_conn()
+
+        try:
+            if admin_mode:
+                router_agent = roles["AuthorTaskRouter"]
+                synth_agent = roles["AnswerSynthesizer"]
+                router_cfg = _agent_runtime_config(router_agent)
+                synth_cfg = _agent_runtime_config(synth_agent)
+
+                router_system = _agent_prompt_text(router_agent, "system", "Classifica il task autore.")
+                router_task_tpl = _agent_prompt_text(router_agent, "task", "Restituisci un piano operativo in JSON.")
+                router_task = (
+                    f"{router_task_tpl}\n\n"
+                    f"[DOMANDA_AUTORE]\n{user_msg}\n\n"
+                    f"[CONTRATTO_OUTPUT_JSON]\n"
+                    f"Restituisci SOLO JSON oggetto con: intent (str), confidence (0..1), tool_plan (array di step {{tool, arguments}}), evidenze_richieste (array), note (str)."
+                )
+                router_hist = [{"role": "system", "content": router_system}] + analysis_history + [{"role": "user", "content": router_task}]
+                router_raw = generate_chapter_text("", router_cfg["provider"], router_cfg["model_name"], router_cfg["api_key"], max_tokens=900, messages=router_hist)
+                router_contract = _normalize_tool_plan_contract(router_raw)
+                debug["tool_contracts"]["author_router"] = {"ok": router_contract["ok"], "error": router_contract.get("error", "")}
+
+                tool_result = {"ok": True, "runs": [], "executed": 0, "blocked": 0, "errors": 0}
+                router_plan = list(router_contract["tool_plan"]) if router_contract["ok"] else []
+                force_vector = _should_force_vector_lookup(user_msg)
+                if force_vector and not _tool_plan_has_vector(router_plan, admin_mode=True):
+                    router_plan.append(_forced_vector_step(user_msg, cap_id, admin_mode=True, k=6))
+                    debug["forced_vector_policy"] = True
+                if router_plan:
+                    tool_result = _execute_tool_plan_with_logging(
+                        conn_tools,
+                        session_key=session_key,
+                        cap_id=cap_id,
+                        admin_mode=True,
+                        agent=router_agent,
+                        tool_plan=router_plan,
+                        stop_on_error=True,
+                    )
+                    debug["tool_runs"] = tool_result.get("runs", [])
+                if force_vector and not tool_result.get("executed"):
+                    fallback_res = _run_direct_vector_fallback(conn_tools, session_key, cap_id, True, router_agent, user_msg, k=6)
+                    tool_result = {"ok": fallback_res.get("ok", False), "runs": [{"index": 1, "tool": "vector_search_author", "status": "ok" if fallback_res.get("ok") else "error", "result": fallback_res}], "executed": 1 if fallback_res.get("ok") else 0, "blocked": 0, "errors": 0 if fallback_res.get("ok") else 1}
+                    debug["tool_runs"] = tool_result["runs"]
+                    debug["forced_vector_policy"] = True
+                evidence_refs = _extract_evidence_refs(tool_result)
+                debug["sources_used"] = evidence_refs
+
+                synth_system = _agent_prompt_text(synth_agent, "system", "Sintetizza una risposta grounded per l'autore.")
+                synth_summary = _agent_prompt_text(synth_agent, "summary", "Produci la risposta finale operativa.")
+                synth_user = (
+                    f"{synth_summary}\n\n"
+                    f"[PIANO_ROUTER_RAW]\n{router_raw}\n\n"
+                    f"[PIANO_ROUTER_JSON]\n{json.dumps(router_contract.get('parsed', {}), ensure_ascii=False)}\n\n"
+                    f"[RISULTATI_TOOL]\n{json.dumps(tool_result, ensure_ascii=False)}\n\n"
+                    f"[EVIDENZE_RIFERIMENTI]\n{json.dumps(evidence_refs, ensure_ascii=False)}\n\n"
+                    f"[DOMANDA_AUTORE]\n{user_msg}"
+                )
+                synth_hist = [{"role": "system", "content": synth_system}] + analysis_history + [{"role": "user", "content": synth_user}]
+                reply = generate_chapter_text("", synth_cfg["provider"], synth_cfg["model_name"], synth_cfg["api_key"], max_tokens=2000, messages=synth_hist)
+                if include_sources and evidence_refs:
+                    reply += "\n\nFonti usate:\n" + "\n".join([f"- cap {r['cap_id']} chunk {r['chunk_no']} (score={r.get('score')})" for r in evidence_refs[:8]])
+                debug["router_plan"] = router_raw[:1500]
+                return {"reply": reply, "spoiler_audit": {"status": "skipped", "violations": []}, "rewritten": False, "debug": debug, "sources_used": evidence_refs}
+
+            answerer_agent = roles["ReaderAnswerer"]
+            judge_agent = roles["SpoilerJudge"]
+            answerer_cfg = _agent_runtime_config(answerer_agent)
+            judge_cfg = _agent_runtime_config(judge_agent)
+
+            answerer_system = _agent_prompt_text(answerer_agent, "system", "Rispondi al lettore senza spoiler.")
+            answerer_task = _agent_prompt_text(answerer_agent, "task", "Rispondi al lettore in modo chiaro e spoiler-free.")
+            answerer_plan_user = (
+                f"{answerer_task}\n\n"
+                f"[DOMANDA]\n{user_msg}\n\n"
+                f"[CONTRATTO_OUTPUT_JSON]\n"
+                f"Restituisci SOLO JSON oggetto con: answer_draft (str), tool_plan (array step {{tool, arguments}}), rationale (str breve)."
+            )
+            answerer_plan_hist = [{"role": "system", "content": answerer_system}] + analysis_history + [{"role": "user", "content": answerer_plan_user}]
+            answerer_raw = generate_chapter_text("", answerer_cfg["provider"], answerer_cfg["model_name"], answerer_cfg["api_key"], max_tokens=1200, messages=answerer_plan_hist)
+            answerer_json = _extract_json_object(answerer_raw) or {}
+            answerer_contract = _normalize_tool_plan_contract(answerer_raw)
+            debug["tool_contracts"]["reader_answerer"] = {"ok": answerer_contract["ok"], "error": answerer_contract.get("error", "")}
+
+            tool_result = {"ok": True, "runs": [], "executed": 0, "blocked": 0, "errors": 0}
+            answerer_plan = list(answerer_contract["tool_plan"]) if answerer_contract["ok"] else []
+            force_vector = _should_force_vector_lookup(user_msg)
+            if force_vector and not _tool_plan_has_vector(answerer_plan, admin_mode=False):
+                answerer_plan.append(_forced_vector_step(user_msg, cap_id, admin_mode=False, k=6))
+                debug["forced_vector_policy"] = True
+            if answerer_plan:
+                tool_result = _execute_tool_plan_with_logging(
+                    conn_tools,
+                    session_key=session_key,
+                    cap_id=cap_id,
+                    admin_mode=False,
+                    agent=answerer_agent,
+                    tool_plan=answerer_plan,
+                    stop_on_error=True,
+                )
+                debug["tool_runs"] = tool_result.get("runs", [])
+            if force_vector and not tool_result.get("executed"):
+                fallback_res = _run_direct_vector_fallback(conn_tools, session_key, cap_id, False, answerer_agent, user_msg, k=6)
+                tool_result = {"ok": fallback_res.get("ok", False), "runs": [{"index": 1, "tool": "vector_search_reader", "status": "ok" if fallback_res.get("ok") else "error", "result": fallback_res}], "executed": 1 if fallback_res.get("ok") else 0, "blocked": 0, "errors": 0 if fallback_res.get("ok") else 1}
+                debug["tool_runs"] = tool_result["runs"]
+                debug["forced_vector_policy"] = True
+            evidence_refs = _extract_evidence_refs(tool_result)
+            debug["sources_used"] = evidence_refs
+
+            draft_from_json = str(answerer_json.get("answer_draft", "")).strip()
+            if draft_from_json:
+                draft_reply = draft_from_json
+            else:
+                answerer_final_user = (
+                    f"{answerer_task}\n\n"
+                    f"[DOMANDA]\n{user_msg}\n\n"
+                    f"[RISULTATI_TOOL]\n{json.dumps(tool_result, ensure_ascii=False)}\n\n"
+                    f"[ISTRUZIONE]\nGenera solo la risposta finale spoiler-free."
+                )
+                answerer_final_hist = [{"role": "system", "content": answerer_system}] + analysis_history + [{"role": "user", "content": answerer_final_user}]
+                draft_reply = generate_chapter_text("", answerer_cfg["provider"], answerer_cfg["model_name"], answerer_cfg["api_key"], max_tokens=1800, messages=answerer_final_hist)
+
+            judge_guard = _agent_prompt_text(judge_agent, "guard", "Valuta se ci sono spoiler.")
+            judge_eval_prompt = (
+                f"{judge_guard}\n\n"
+                f"[CAPITOLO_FRONTIER]\n{cap_id}\n\n"
+                f"[DOMANDA]\n{user_msg}\n\n"
+                f"[RISPOSTA_BOZZA]\n{draft_reply}\n\n"
+                f"[FORMATO_RISPOSTA]\nRestituisci SOLO JSON con: status (SAFE|UNSAFE), reason, tool_plan (array opzionale)."
+            )
+            judge_hist = [{"role": "system", "content": judge_guard}, {"role": "user", "content": judge_eval_prompt}]
+            judge_eval_raw = generate_chapter_text("", judge_cfg["provider"], judge_cfg["model_name"], judge_cfg["api_key"], max_tokens=400, messages=judge_hist).strip()
+            judge_json = _extract_json_object(judge_eval_raw) or {}
+            judge_status = str(judge_json.get("status", "")).upper()
+            unsafe_by_judge = judge_status == "UNSAFE" or judge_eval_raw.upper().startswith("UNSAFE")
+
+            rewritten = False
+            guarded_reply = draft_reply
+            if unsafe_by_judge:
+                rewrite_prompt = _agent_prompt_text(judge_agent, "rewrite", "Riscrivi in modalità sicura senza spoiler.")
+                rewrite_user = (
+                    f"{rewrite_prompt}\n\n"
+                    f"[CAPITOLO_FRONTIER]\n{cap_id}\n\n"
+                    f"[DOMANDA]\n{user_msg}\n\n"
+                    f"[RISPOSTA_DA_RISCRIVERE]\n{draft_reply}"
+                )
+                rewrite_hist = [{"role": "system", "content": rewrite_prompt}, {"role": "user", "content": rewrite_user}]
+                guarded_reply = generate_chapter_text("", judge_cfg["provider"], judge_cfg["model_name"], judge_cfg["api_key"], max_tokens=1800, messages=rewrite_hist)
+                rewritten = True
+
+            safe_result = enforce_reader_safety(guarded_reply, cap_id, get_all())
+            if safe_result["rewritten"]:
+                rewritten = True
+            debug["judge_eval"] = judge_eval_raw[:500]
+            final_reply = safe_result["reply"]
+            if include_sources and evidence_refs:
+                final_reply += "\n\nFonti usate:\n" + "\n".join([f"- cap {r['cap_id']} chunk {r['chunk_no']} (score={r.get('score')})" for r in evidence_refs[:8]])
+            return {"reply": final_reply, "spoiler_audit": safe_result["audit"], "rewritten": rewritten, "debug": debug, "sources_used": evidence_refs}
+        finally:
+            conn_tools.close()
+
     if not should_stream:
         try:
-            analysis_history = run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=user_msg, admin_mode=admin_mode)
-            r_prompt = prompts.get("chat_step4_reasoning_prompt", "Analizza il contesto e l'opera. Pianifica una risposta strategica in base alla richiesta dell'autore.")
-            r_history = analysis_history + [{"role": "user", "content": r_prompt}]
-            reasoning_plan = generate_chapter_text("", provider, model_name, api_key, max_tokens=1500, messages=r_history)
-            s_prompt = prompts.get("chat_step5_synthesis_prompt", "In base al ragionamento precedente, rispondi all'autore.")
-            s_history = analysis_history + [{"role": "assistant", "content": reasoning_plan}, {"role": "user", "content": s_prompt}]
-            reply = generate_chapter_text("", provider, model_name, api_key, max_tokens=2000, messages=s_history)
-            spoiler_audit = {"status": "skipped", "violations": []}
-            rewritten = False
+            debug = {}
+            if multirole_ready:
+                result = run_multirole_phase1()
+                reply = result["reply"]
+                spoiler_audit = result["spoiler_audit"]
+                rewritten = result["rewritten"]
+                debug = result["debug"]
+            else:
+                analysis_history = run_deep_context_pipeline(cap_id, provider, model_name, api_key, user_msg=user_msg, admin_mode=admin_mode)
+                r_prompt = prompts.get("chat_step4_reasoning_prompt", "Analizza il contesto e l'opera. Pianifica una risposta strategica in base alla richiesta dell'autore.")
+                r_history = analysis_history + [{"role": "user", "content": r_prompt}]
+                reasoning_plan = generate_chapter_text("", provider, model_name, api_key, max_tokens=1500, messages=r_history)
+                s_prompt = prompts.get("chat_step5_synthesis_prompt", "In base al ragionamento precedente, rispondi all'autore.")
+                s_history = analysis_history + [{"role": "assistant", "content": reasoning_plan}, {"role": "user", "content": s_prompt}]
+                reply = generate_chapter_text("", provider, model_name, api_key, max_tokens=2000, messages=s_history)
+                spoiler_audit = {"status": "skipped", "violations": []}
+                rewritten = False
+                if not admin_mode:
+                    safe_result = enforce_reader_safety(reply, cap_id, get_all())
+                    reply = safe_result["reply"]
+                    spoiler_audit = safe_result["audit"]
+                    rewritten = safe_result["rewritten"]
+                debug = {"multirole": False, "fallback": True, "missing_roles": missing_roles}
+
             if not admin_mode:
-                safe_result = enforce_reader_safety(reply, cap_id, get_all())
-                reply = safe_result["reply"]
-                spoiler_audit = safe_result["audit"]
-                rewritten = safe_result["rewritten"]
                 log_spoiler_audit_event(session_key, cap_id, spoiler_audit, rewritten)
 
             return jsonify({
@@ -2541,6 +3246,8 @@ def api_chat(cap_id):
                 "memory": memory_snapshot,
                 "spoiler_audit": spoiler_audit,
                 "rewritten_for_safety": rewritten,
+                "agentic_debug": debug,
+                "sources_used": result.get("sources_used", []) if multirole_ready else [],
             })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -2553,6 +3260,19 @@ def api_chat(cap_id):
         
         try:
             yield f"data: {json.dumps({'stage': 'context', 'content': f'Sessione: {session_key}'})}\n\n"
+            if multirole_ready:
+                yield f"data: {json.dumps({'stage': 'context', 'content': '⚙️ Fase 1 multi-role attiva (registry).'})}\n\n"
+                result = run_multirole_phase1()
+                reply = result["reply"]
+                if include_sources and result.get("sources_used"):
+                    src_count = len(result.get("sources_used", []))
+                    yield f"data: {json.dumps({'stage': 'context', 'content': f'📚 Fonti usate: {src_count}'})}\n\n"
+                if not admin_mode:
+                    log_spoiler_audit_event(session_key, cap_id, result["spoiler_audit"], result["rewritten"])
+                yield f"data: {json.dumps({'stage': 'synthesis', 'content': reply})}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
             generator = run_orchestrator_stream(
                 cap_id, provider, model_name, api_key, user_msg, admin_mode, prompts,
                 get_all, get_full_canon, get_conn, read_txt, get_character_context
@@ -2607,6 +3327,569 @@ def api_chat_memory():
     try:
         memory = load_session_memory(conn, session_key)
         return jsonify({"status": "success", "session_key": session_key, "memory": memory})
+    finally:
+        conn.close()
+
+
+@app.route("/api/vector-index/stats")
+@login_required
+def api_vector_index_stats():
+    conn = get_conn()
+    try:
+        ensure_vector_schema(conn)
+        stats = vector_index_stats(conn)
+        return jsonify({"status": "success", **stats})
+    finally:
+        conn.close()
+
+
+@app.route("/api/vector-index/versions")
+@login_required
+def api_vector_index_versions():
+    limit_raw = request.args.get("limit", "20")
+    try:
+        limit = max(1, min(int(limit_raw), 100))
+    except Exception:
+        return jsonify({"status": "error", "message": "limit non valido"}), 400
+    conn = get_conn()
+    try:
+        ensure_vector_schema(conn)
+        payload = vector_list_index_versions(conn, limit=limit)
+        return jsonify({"status": "success", **payload})
+    finally:
+        conn.close()
+
+
+@app.route("/api/vector-index/rebuild", methods=["POST"])
+@login_required
+def api_vector_index_rebuild():
+    data = request.json or {}
+    chunk_size = int(data.get("chunk_size", 1200) or 1200)
+    overlap = int(data.get("overlap", 180) or 180)
+    embedding_dim = int(data.get("embedding_dim", 256) or 256)
+    embedding_provider = (data.get("embedding_provider") or get_env_var("VECTOR_EMBEDDING_PROVIDER", "hash_local")).strip() or "hash_local"
+    embedding_model = (data.get("embedding_model") or get_env_var("VECTOR_EMBEDDING_MODEL", "")).strip()
+    embedding_base_url = (data.get("embedding_base_url") or get_env_var("VECTOR_EMBEDDING_BASE_URL", "")).strip()
+    embedding_api_key = (data.get("embedding_api_key") or get_env_var("VECTOR_EMBEDDING_API_KEY", "")).strip()
+    chunk_size = max(300, min(chunk_size, 3000))
+    overlap = max(0, min(overlap, chunk_size - 50))
+    embedding_dim = max(64, min(embedding_dim, 1024))
+    conn = get_conn()
+    try:
+        ensure_vector_schema(conn)
+        result = vector_rebuild_index(
+            conn,
+            get_all(),
+            read_txt,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            embedding_dim=embedding_dim,
+            embedding_provider=embedding_provider,
+            embedding_model=embedding_model,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
+        stats = vector_index_stats(conn)
+        return jsonify({"status": "success", "result": result, "stats": stats})
+    finally:
+        conn.close()
+
+
+@app.route("/api/vector-index/refresh", methods=["POST"])
+@login_required
+def api_vector_index_refresh():
+    data = request.json or {}
+    cap_ids_raw = data.get("cap_ids") if isinstance(data.get("cap_ids"), list) else []
+    chunk_size = int(data.get("chunk_size", 1200) or 1200)
+    overlap = int(data.get("overlap", 180) or 180)
+    embedding_dim = int(data.get("embedding_dim", 256) or 256)
+    embedding_provider = (data.get("embedding_provider") or get_env_var("VECTOR_EMBEDDING_PROVIDER", "hash_local")).strip() or "hash_local"
+    embedding_model = (data.get("embedding_model") or get_env_var("VECTOR_EMBEDDING_MODEL", "")).strip()
+    embedding_base_url = (data.get("embedding_base_url") or get_env_var("VECTOR_EMBEDDING_BASE_URL", "")).strip()
+    embedding_api_key = (data.get("embedding_api_key") or get_env_var("VECTOR_EMBEDDING_API_KEY", "")).strip()
+    chunk_size = max(300, min(chunk_size, 3000))
+    overlap = max(0, min(overlap, chunk_size - 50))
+    embedding_dim = max(64, min(embedding_dim, 1024))
+    conn = get_conn()
+    try:
+        ensure_vector_schema(conn)
+        result = vector_refresh_index_for_chapters(
+            conn,
+            get_all(),
+            read_txt,
+            cap_ids=cap_ids_raw,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            embedding_dim=embedding_dim,
+            embedding_provider=embedding_provider,
+            embedding_model=embedding_model,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
+        if not result.get("ok"):
+            return jsonify({"status": "error", **result}), 400
+        stats = vector_index_stats(conn)
+        return jsonify({"status": "success", "result": result, "stats": stats})
+    finally:
+        conn.close()
+
+
+@app.route("/api/vector-index/search")
+@login_required
+def api_vector_index_search():
+    query = (request.args.get("q") or "").strip()
+    mode = (request.args.get("mode") or "author").strip().lower()
+    cap_id_raw = request.args.get("cap_id")
+    k_raw = request.args.get("k", "5")
+    min_score_raw = request.args.get("min_score", "0")
+    embedding_dim_raw = request.args.get("embedding_dim", "256")
+    embedding_provider = (request.args.get("embedding_provider") or "").strip() or get_env_var("VECTOR_EMBEDDING_PROVIDER", "hash_local")
+    embedding_model = (request.args.get("embedding_model") or "").strip() or get_env_var("VECTOR_EMBEDDING_MODEL", "")
+    embedding_base_url = (request.args.get("embedding_base_url") or "").strip() or get_env_var("VECTOR_EMBEDDING_BASE_URL", "")
+    embedding_api_key = (request.args.get("embedding_api_key") or "").strip() or get_env_var("VECTOR_EMBEDDING_API_KEY", "")
+    try:
+        k = max(1, min(int(k_raw), 20))
+    except Exception:
+        return jsonify({"status": "error", "message": "k non valido"}), 400
+    try:
+        min_score = float(min_score_raw)
+    except Exception:
+        return jsonify({"status": "error", "message": "min_score non valido"}), 400
+    try:
+        embedding_dim = max(64, min(int(embedding_dim_raw), 1024))
+    except Exception:
+        return jsonify({"status": "error", "message": "embedding_dim non valido"}), 400
+    cap_id = None
+    if cap_id_raw is not None and str(cap_id_raw).strip() != "":
+        try:
+            cap_id = max(1, int(cap_id_raw))
+        except Exception:
+            return jsonify({"status": "error", "message": "cap_id non valido"}), 400
+    if mode == "reader" and cap_id is None:
+        return jsonify({"status": "error", "message": "cap_id obbligatorio in mode=reader"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_vector_schema(conn)
+        result = vector_search_index(
+            conn,
+            query,
+            k=k,
+            max_cap_id=cap_id if mode == "reader" else None,
+            min_score=min_score,
+            embedding_dim=embedding_dim,
+            embedding_provider=embedding_provider,
+            embedding_model=embedding_model,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
+        status = "success" if result.get("ok") else "error"
+        code = 200 if result.get("ok") else 400
+        return jsonify({"status": status, "mode": mode, **result}), code
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/health")
+def api_mcp_health():
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        ensure_vector_schema(conn)
+        stats = vector_index_stats(conn)
+        return jsonify(
+            {
+                "status": "success",
+                "bridge": "ok",
+                "time": int(time.time()),
+                "rate_limit_backend": "sqlite_persistent",
+                "token_policy_backend": "sqlite+env",
+                "vector_index": {
+                    "chunks": stats.get("chunks", 0),
+                    "chapters": stats.get("chapters", 0),
+                    "active_version": stats.get("active_version", ""),
+                },
+            }
+        )
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/tokens")
+@login_required
+def api_mcp_tokens_list():
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        _sync_mcp_tokens_from_env(conn)
+        rows = conn.execute(
+            """
+            SELECT token_id, label, tenant_id, scope, max_cap_id, rate_limit_per_minute, enabled, policy_json, created_at, updated_at
+            FROM mcp_bridge_tokens
+            ORDER BY token_id
+            """
+        ).fetchall()
+        return jsonify({"status": "success", "items": [_mcp_public_token_row(r) for r in rows]})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/tokens/save", methods=["POST"])
+@login_required
+def api_mcp_tokens_save():
+    data = request.json or {}
+    token_id = (data.get("token_id") or "").strip()
+    plain_token = (data.get("token") or "").strip()
+    if not token_id:
+        return jsonify({"status": "error", "message": "token_id obbligatorio"}), 400
+    scope = (data.get("scope") or "both").strip().lower()
+    if scope not in {"reader", "author", "both"}:
+        return jsonify({"status": "error", "message": "scope non valido"}), 400
+    try:
+        rate_limit_per_minute = max(1, min(int(data.get("rate_limit_per_minute", 60) or 60), 600))
+    except Exception:
+        return jsonify({"status": "error", "message": "rate_limit_per_minute non valido"}), 400
+    max_cap_id = data.get("max_cap_id")
+    try:
+        max_cap_id = int(max_cap_id) if max_cap_id not in (None, "", 0, "0") else None
+        if max_cap_id is not None and max_cap_id <= 0:
+            max_cap_id = None
+    except Exception:
+        return jsonify({"status": "error", "message": "max_cap_id non valido"}), 400
+    enabled = 1 if bool(data.get("enabled", True)) else 0
+    label = (data.get("label") or token_id).strip()
+    tenant_id = (data.get("tenant_id") or "default").strip() or "default"
+    policy = data.get("policy", {})
+    if not isinstance(policy, dict):
+        return jsonify({"status": "error", "message": "policy deve essere oggetto JSON"}), 400
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        row = conn.execute("SELECT token_hash FROM mcp_bridge_tokens WHERE token_id=?", (token_id,)).fetchone()
+        token_hash = _mcp_token_sha(plain_token) if plain_token else (row["token_hash"] if row else "")
+        if not token_hash:
+            return jsonify({"status": "error", "message": "token obbligatorio per nuova creazione"}), 400
+        conn.execute(
+            """
+            INSERT INTO mcp_bridge_tokens
+                (token_id, token_hash, label, tenant_id, scope, max_cap_id, rate_limit_per_minute, enabled, policy_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(token_id) DO UPDATE SET
+                token_hash=excluded.token_hash,
+                label=excluded.label,
+                tenant_id=excluded.tenant_id,
+                scope=excluded.scope,
+                max_cap_id=excluded.max_cap_id,
+                rate_limit_per_minute=excluded.rate_limit_per_minute,
+                enabled=excluded.enabled,
+                policy_json=excluded.policy_json,
+                updated_at=CURRENT_TIMESTAMP
+            """,
+            (
+                token_id,
+                token_hash,
+                label,
+                tenant_id,
+                scope,
+                max_cap_id,
+                rate_limit_per_minute,
+                enabled,
+                json.dumps(policy, ensure_ascii=False),
+            ),
+        )
+        conn.commit()
+        out = conn.execute(
+            """
+            SELECT token_id, label, tenant_id, scope, max_cap_id, rate_limit_per_minute, enabled, policy_json, created_at, updated_at
+            FROM mcp_bridge_tokens WHERE token_id=?
+            """,
+            (token_id,),
+        ).fetchone()
+        return jsonify({"status": "success", "item": _mcp_public_token_row(out)})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/tokens/<token_id>/rotate", methods=["POST"])
+@login_required
+def api_mcp_tokens_rotate(token_id):
+    data = request.json or {}
+    new_token = (data.get("new_token") or "").strip()
+    if not new_token:
+        return jsonify({"status": "error", "message": "new_token obbligatorio"}), 400
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        cur = conn.execute(
+            "UPDATE mcp_bridge_tokens SET token_hash=?, updated_at=CURRENT_TIMESTAMP WHERE token_id=?",
+            (_mcp_token_sha(new_token), token_id),
+        )
+        if not cur.rowcount:
+            return jsonify({"status": "error", "message": "token_id non trovato"}), 404
+        conn.commit()
+        return jsonify({"status": "success", "token_id": token_id, "rotated": True})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/tokens/<token_id>/enabled", methods=["POST"])
+@login_required
+def api_mcp_tokens_enabled(token_id):
+    data = request.json or {}
+    enabled = 1 if bool(data.get("enabled", True)) else 0
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        cur = conn.execute(
+            "UPDATE mcp_bridge_tokens SET enabled=?, updated_at=CURRENT_TIMESTAMP WHERE token_id=?",
+            (enabled, token_id),
+        )
+        if not cur.rowcount:
+            return jsonify({"status": "error", "message": "token_id non trovato"}), 404
+        conn.commit()
+        return jsonify({"status": "success", "token_id": token_id, "enabled": bool(enabled)})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/tokens/<token_id>", methods=["DELETE"])
+@login_required
+def api_mcp_tokens_delete(token_id):
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        cur = conn.execute("DELETE FROM mcp_bridge_tokens WHERE token_id=?", (token_id,))
+        if not cur.rowcount:
+            return jsonify({"status": "error", "message": "token_id non trovato"}), 404
+        conn.commit()
+        return jsonify({"status": "success", "deleted": True, "token_id": token_id})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/audit/analytics")
+@login_required
+def api_mcp_audit_analytics():
+    days_raw = request.args.get("days", "7")
+    try:
+        days = max(1, min(int(days_raw), 90))
+    except Exception:
+        return jsonify({"status": "error", "message": "days non valido"}), 400
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        since_expr = f"-{days} day"
+        by_status = conn.execute(
+            """
+            SELECT status, COUNT(*) AS n
+            FROM mcp_bridge_audit
+            WHERE created_at >= datetime('now', ?)
+            GROUP BY status
+            ORDER BY n DESC
+            """,
+            (since_expr,),
+        ).fetchall()
+        top_tokens = conn.execute(
+            """
+            SELECT token_id, COUNT(*) AS n
+            FROM mcp_bridge_audit
+            WHERE created_at >= datetime('now', ?)
+            GROUP BY token_id
+            ORDER BY n DESC
+            LIMIT 10
+            """,
+            (since_expr,),
+        ).fetchall()
+        top_clients = conn.execute(
+            """
+            SELECT client_key, COUNT(*) AS n
+            FROM mcp_bridge_audit
+            WHERE created_at >= datetime('now', ?)
+            GROUP BY client_key
+            ORDER BY n DESC
+            LIMIT 10
+            """,
+            (since_expr,),
+        ).fetchall()
+        latency = conn.execute(
+            """
+            SELECT AVG(latency_ms) AS avg_latency_ms, MAX(latency_ms) AS max_latency_ms
+            FROM mcp_bridge_audit
+            WHERE created_at >= datetime('now', ?) AND latency_ms > 0
+            """,
+            (since_expr,),
+        ).fetchone()
+        return jsonify(
+            {
+                "status": "success",
+                "days": days,
+                "by_status": [dict(r) for r in by_status],
+                "top_tokens": [dict(r) for r in top_tokens],
+                "top_clients": [dict(r) for r in top_clients],
+                "latency": {
+                    "avg_latency_ms": float(latency["avg_latency_ms"] or 0.0),
+                    "max_latency_ms": int(latency["max_latency_ms"] or 0),
+                },
+            }
+        )
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/audit/cleanup", methods=["POST"])
+@login_required
+def api_mcp_audit_cleanup():
+    data = request.json or {}
+    try:
+        retention_days = max(1, min(int(data.get("retention_days", 30) or 30), 3650))
+    except Exception:
+        return jsonify({"status": "error", "message": "retention_days non valido"}), 400
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        cur = conn.execute(
+            "DELETE FROM mcp_bridge_audit WHERE created_at < datetime('now', ?)",
+            (f"-{retention_days} day",),
+        )
+        deleted = int(cur.rowcount or 0)
+        conn.commit()
+        return jsonify({"status": "success", "retention_days": retention_days, "deleted_rows": deleted})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/capabilities")
+def api_mcp_capabilities():
+    return jsonify(
+        {
+            "status": "success",
+            "bridge": "vector-search-read-only",
+            "endpoints": [
+                {"path": "/api/mcp/health", "method": "GET", "auth": "optional"},
+                {"path": "/api/mcp/capabilities", "method": "GET", "auth": "optional"},
+                {"path": "/api/mcp/list_vector_index_versions", "method": "GET", "auth": "bearer"},
+                {"path": "/api/mcp/vector-search", "method": "POST", "auth": "bearer"},
+                {"path": "/api/mcp/tokens", "method": "GET", "auth": "session_admin"},
+                {"path": "/api/mcp/tokens/save", "method": "POST", "auth": "session_admin"},
+                {"path": "/api/mcp/tokens/<token_id>/rotate", "method": "POST", "auth": "session_admin"},
+                {"path": "/api/mcp/tokens/<token_id>/enabled", "method": "POST", "auth": "session_admin"},
+                {"path": "/api/mcp/tokens/<token_id>", "method": "DELETE", "auth": "session_admin"},
+                {"path": "/api/mcp/audit/analytics", "method": "GET", "auth": "session_admin"},
+                {"path": "/api/mcp/audit/cleanup", "method": "POST", "auth": "session_admin"},
+            ],
+            "modes": ["reader", "author"],
+            "policy_fields": ["scope", "max_cap_id", "rate_limit_per_minute", "tenant_id"],
+        }
+    )
+
+
+@app.route("/api/mcp/list_vector_index_versions")
+def api_mcp_list_vector_index_versions():
+    client_key = request.headers.get("X-Client-Id") or request.remote_addr or "unknown"
+    limit_raw = request.args.get("limit", "20")
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        policy = _mcp_resolve_policy(conn, request)
+        if not policy:
+            _mcp_audit_log(conn, token_id="", tenant_id="", client_key=client_key, endpoint="/api/mcp/list_vector_index_versions", status="unauthorized", error_message="unauthorized")
+            return jsonify({"status": "error", "message": "unauthorized"}), 401
+        if not _mcp_rate_limit_ok(conn, policy["token_id"], client_key, per_minute=policy["rate_limit_per_minute"]):
+            _mcp_audit_log(conn, token_id=policy["token_id"], tenant_id=policy["tenant_id"], client_key=client_key, endpoint="/api/mcp/list_vector_index_versions", status="rate_limited", error_message="rate_limited")
+            return jsonify({"status": "error", "message": "rate_limited"}), 429
+        try:
+            limit = max(1, min(int(limit_raw), 100))
+        except Exception:
+            _mcp_audit_log(conn, token_id=policy["token_id"], tenant_id=policy["tenant_id"], client_key=client_key, endpoint="/api/mcp/list_vector_index_versions", status="bad_request", error_message="limit non valido")
+            return jsonify({"status": "error", "message": "limit non valido"}), 400
+        ensure_vector_schema(conn)
+        payload = vector_list_index_versions(conn, limit=limit)
+        _mcp_audit_log(conn, token_id=policy["token_id"], tenant_id=policy["tenant_id"], client_key=client_key, endpoint="/api/mcp/list_vector_index_versions", status="ok", result_count=len(payload.get("items", [])), meta={"limit": limit})
+        return jsonify({"status": "success", **payload})
+    finally:
+        conn.close()
+
+
+@app.route("/api/mcp/vector-search", methods=["POST"])
+def api_mcp_vector_search():
+    t0 = time.time()
+    client_key = request.headers.get("X-Client-Id") or request.remote_addr or "unknown"
+    data = request.json or {}
+    mode = (data.get("mode") or "author").strip().lower()
+    query = (data.get("query") or "").strip()
+    embedding_provider = (data.get("embedding_provider") or "").strip() or get_env_var("VECTOR_EMBEDDING_PROVIDER", "hash_local")
+    embedding_model = (data.get("embedding_model") or "").strip() or get_env_var("VECTOR_EMBEDDING_MODEL", "")
+    embedding_base_url = (data.get("embedding_base_url") or "").strip() or get_env_var("VECTOR_EMBEDDING_BASE_URL", "")
+    embedding_api_key = (data.get("embedding_api_key") or "").strip() or get_env_var("VECTOR_EMBEDDING_API_KEY", "")
+    try:
+        k = max(1, min(int(data.get("k", 5) or 5), 20))
+        min_score = float(data.get("min_score", 0.0) or 0.0)
+        embedding_dim = max(64, min(int(data.get("embedding_dim", 256) or 256), 1024))
+    except Exception:
+        return jsonify({"status": "error", "message": "parametri numerici non validi"}), 400
+    if mode not in {"reader", "author"}:
+        return jsonify({"status": "error", "message": "mode non valido"}), 400
+    cap_id = data.get("cap_id")
+    if mode == "reader":
+        try:
+            cap_id = int(cap_id)
+        except Exception:
+            return jsonify({"status": "error", "message": "cap_id obbligatorio in mode=reader"}), 400
+        if cap_id <= 0:
+            return jsonify({"status": "error", "message": "cap_id non valido"}), 400
+    else:
+        cap_id = None
+
+    conn = get_conn()
+    try:
+        ensure_agent_registry_schema(conn)
+        policy = _mcp_resolve_policy(conn, request)
+        if not policy:
+            _mcp_audit_log(conn, token_id="", tenant_id="", client_key=client_key, endpoint="/api/mcp/vector-search", mode=mode, cap_id=cap_id, query_len=len(query), k=k, min_score=min_score, status="unauthorized", error_message="unauthorized")
+            return jsonify({"status": "error", "message": "unauthorized"}), 401
+        if not _mcp_policy_allows_mode(policy, mode):
+            _mcp_audit_log(conn, token_id=policy["token_id"], tenant_id=policy["tenant_id"], client_key=client_key, endpoint="/api/mcp/vector-search", mode=mode, cap_id=cap_id, query_len=len(query), k=k, min_score=min_score, status="forbidden_scope", error_message="scope non autorizzato")
+            return jsonify({"status": "error", "message": "scope non autorizzato"}), 403
+        if not _mcp_policy_allows_cap(policy, mode, cap_id):
+            _mcp_audit_log(conn, token_id=policy["token_id"], tenant_id=policy["tenant_id"], client_key=client_key, endpoint="/api/mcp/vector-search", mode=mode, cap_id=cap_id, query_len=len(query), k=k, min_score=min_score, status="forbidden_cap", error_message="cap_id oltre policy")
+            return jsonify({"status": "error", "message": "cap_id oltre policy"}), 403
+        if not _mcp_rate_limit_ok(conn, policy["token_id"], client_key, per_minute=policy["rate_limit_per_minute"]):
+            _mcp_audit_log(conn, token_id=policy["token_id"], tenant_id=policy["tenant_id"], client_key=client_key, endpoint="/api/mcp/vector-search", mode=mode, cap_id=cap_id, query_len=len(query), k=k, min_score=min_score, status="rate_limited", error_message="rate_limited")
+            return jsonify({"status": "error", "message": "rate_limited"}), 429
+        ensure_vector_schema(conn)
+        result = vector_search_index(
+            conn,
+            query,
+            k=k,
+            max_cap_id=cap_id if mode == "reader" else None,
+            min_score=min_score,
+            embedding_dim=embedding_dim,
+            embedding_provider=embedding_provider,
+            embedding_model=embedding_model,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
+        code = 200 if result.get("ok") else 400
+        status = "success" if result.get("ok") else "error"
+        _mcp_audit_log(
+            conn,
+            token_id=policy["token_id"],
+            tenant_id=policy["tenant_id"],
+            client_key=client_key,
+            endpoint="/api/mcp/vector-search",
+            mode=mode,
+            cap_id=cap_id,
+            query_len=len(query),
+            k=k,
+            min_score=min_score,
+            status="ok" if result.get("ok") else "error",
+            result_count=len(result.get("results", []) or []),
+            error_message=result.get("error", "") if not result.get("ok") else "",
+            latency_ms=int((time.time() - t0) * 1000),
+            meta={"search_mode": result.get("search_mode", "")},
+        )
+        return jsonify({"status": status, "mode": mode, **result}), code
     finally:
         conn.close()
 
@@ -2693,6 +3976,16 @@ def settings():
             admin_options += f'<option value="{m[0]}" {a_sel}>{m[1]}</option>'
         frontend_options += '</optgroup>'
         admin_options += '</optgroup>'
+
+    agent_models_catalog = {
+        "openai": [m[0] for m in MODELS_CONFIG.get("openai", [])],
+        "anthropic": [m[0] for m in MODELS_CONFIG.get("anthropic", [])],
+        "gemini": [m[0] for m in MODELS_CONFIG.get("google", [])],
+        "openai_compatible": [],
+        "lmstudio": [],
+        "ollama": [],
+    }
+    agent_models_catalog_json = json.dumps(agent_models_catalog, ensure_ascii=False)
     
     body = f"""
     <div class="topbar">
@@ -2711,6 +4004,7 @@ def settings():
         <div class="tab" data-group="set" data-id="aiflow">🧠 Flusso Generazione AI</div>
         <div class="tab" data-group="set" data-id="prompt_edit">✍️ Modifica Prompt</div>
         <div class="tab" data-group="set" data-id="ui_ext">🎨 UI & Contatti (Donazioni)</div>
+        <div class="tab" data-group="set" data-id="agentic">🤖 Gestione Agenti Chat</div>
       </div>
       
       <form method="POST">
@@ -2756,6 +4050,86 @@ def settings():
                 document.getElementById('donations-container').appendChild(div);
             }}
             </script>
+          </div>
+        </div>
+        <!-- TAB GESTIONE AGENTI -->
+        <div class="tab-content" data-tab="set" data-id="agentic">
+          <div class="card" style="max-width:1100px">
+            <h2 style="margin-bottom:10px;color:#6fa8dc">🤖 Registro Agenti Chat (Reader/Author)</h2>
+            <p style="color:var(--muted);font-size:12px;margin-bottom:18px">
+              Da qui puoi bootstrap, validare, testare e <b>modificare provider/modello/endpoint</b> degli agenti usati dalla chat backend/frontend.
+              I modelli cloud disponibili vengono caricati dal catalogo interno (<code>OpenAI/Anthropic/Gemini</code>), mentre per <code>LM Studio/Ollama/OpenAI-compatible</code> puoi usare ID custom o discovery endpoint.
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+              <button type="button" class="btn btn-primary" onclick="agenticBootstrap()">Bootstrap Defaults</button>
+              <button type="button" class="btn" onclick="agenticReadiness()">Readiness Report</button>
+              <button type="button" class="btn" onclick="agenticValidate('reader')">Valida Reader</button>
+              <button type="button" class="btn" onclick="agenticValidate('author')">Valida Author</button>
+              <button type="button" class="btn" onclick="agenticLoadRegistry()">Ricarica Registro</button>
+            </div>
+            <div id="agentic-status" style="display:none;padding:10px;border:1px solid #333;border-radius:6px;background:#111;font-family:monospace;font-size:12px;white-space:pre-wrap"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+              <div style="background:#0f1115;border:1px solid #2a2f3a;border-radius:8px;padding:12px">
+                <h3 style="margin:0 0 8px 0;color:#6fa8dc">Agenti Reader</h3>
+                <div id="agentic-reader-list" style="font-size:12px;color:#d1d5db">Caricamento...</div>
+              </div>
+              <div style="background:#0f1115;border:1px solid #2a2f3a;border-radius:8px;padding:12px">
+                <h3 style="margin:0 0 8px 0;color:#a888ca">Agenti Author</h3>
+                <div id="agentic-author-list" style="font-size:12px;color:#d1d5db">Caricamento...</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;background:#0f1115;border:1px solid #2a2f3a;border-radius:8px;padding:12px">
+              <h3 style="margin:0 0 8px 0;color:#c9a96e">Endpoint Provider registrati</h3>
+              <div id="agentic-endpoints-list" style="font-size:12px;color:#d1d5db">Caricamento...</div>
+            </div>
+            <div style="margin-top:16px;background:#0f1115;border:1px solid #2a2f3a;border-radius:8px;padding:12px">
+              <h3 style="margin:0 0 8px 0;color:#d0b36a">Aggiungi/aggiorna endpoint custom</h3>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:10px">
+                <input id="agentic-ep-key" type="text" placeholder="endpoint_key es: lmstudio-locale" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <input id="agentic-ep-label" type="text" placeholder="Label endpoint" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <select id="agentic-ep-provider" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                  <option value="openai">openai</option>
+                  <option value="anthropic">anthropic</option>
+                  <option value="gemini">gemini</option>
+                  <option value="openai_compatible">openai_compatible</option>
+                  <option value="lmstudio">lmstudio</option>
+                  <option value="ollama">ollama</option>
+                </select>
+                <input id="agentic-ep-url" type="text" placeholder="Base URL (opzionale per cloud)" style="grid-column:span 2;background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <input id="agentic-ep-keyenv" type="text" placeholder="API key env (es: OPENAI_API_KEY)" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;margin-top:10px;flex-wrap:wrap">
+                <label style="font-size:12px;color:#9ca3af"><input type="checkbox" id="agentic-ep-discovery" checked> supports_discovery</label>
+                <label style="font-size:12px;color:#9ca3af"><input type="checkbox" id="agentic-ep-local"> is_local</label>
+                <label style="font-size:12px;color:#9ca3af"><input type="checkbox" id="agentic-ep-enabled" checked> enabled</label>
+                <button type="button" class="btn btn-primary" onclick="agenticSaveEndpoint()">Salva endpoint</button>
+              </div>
+            </div>
+            <div style="margin-top:16px;background:#0f1115;border:1px solid #2a2f3a;border-radius:8px;padding:12px">
+              <h3 style="margin:0 0 8px 0;color:#6fcf6f">🔐 Token MCP (CRUD + rotazione)</h3>
+              <div id="agentic-mcp-tokens-list" style="font-size:12px;color:#d1d5db">Caricamento...</div>
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-top:10px">
+                <input id="mcp-token-id" type="text" placeholder="token_id" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <input id="mcp-token-label" type="text" placeholder="label" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <input id="mcp-token-tenant" type="text" placeholder="tenant_id (default)" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <select id="mcp-token-scope" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                  <option value="both">both</option>
+                  <option value="reader">reader</option>
+                  <option value="author">author</option>
+                </select>
+                <input id="mcp-token-secret" type="text" placeholder="token (nuovo o rotate)" style="grid-column:span 2;background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <input id="mcp-token-max-cap" type="number" min="1" placeholder="max_cap_id opzionale" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+                <input id="mcp-token-rpm" type="number" min="1" max="600" value="60" placeholder="rate/min" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:8px;border-radius:6px">
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+                <label style="font-size:12px;color:#9ca3af"><input type="checkbox" id="mcp-token-enabled" checked> enabled</label>
+                <button type="button" class="btn btn-primary" onclick="mcpSaveToken()">Salva token</button>
+                <button type="button" class="btn" onclick="mcpRotateToken()">Ruota token</button>
+                <button type="button" class="btn" onclick="mcpDeleteToken()">Elimina token</button>
+                <button type="button" class="btn" onclick="mcpLoadAuditAnalytics()">Audit analytics</button>
+                <button type="button" class="btn" onclick="mcpCleanupAudit()">Cleanup audit</button>
+              </div>
+            </div>
           </div>
         </div>
         <!-- TAB GENERALI E CHIAVI -->
@@ -3161,8 +4535,298 @@ def settings():
         t.classList.add('active');
         document.querySelectorAll('.tab-content[data-tab="set"]').forEach(x => x.classList.remove('active'));
         document.querySelector('.tab-content[data-tab="set"][data-id="'+t.dataset.id+'"]').classList.add('active');
+        if (t.dataset.id === "agentic") {{
+          agenticLoadRegistry();
+        }}
       }});
     }});
+    const AGENT_MODELS_CATALOG = {agent_models_catalog_json};
+    let AGENT_CACHE = {{}};
+    let ENDPOINT_CACHE = [];
+    async function agenticApi(url, options = {{}}) {{
+      const res = await fetch(url, options);
+      let data = {{}};
+      try {{
+        data = await res.json();
+      }} catch (_) {{
+        data = {{}};
+      }}
+      if (!res.ok) {{
+        throw new Error(data.message || `Errore HTTP ${{res.status}}`);
+      }}
+      return data;
+    }}
+    function providerOptions(selected) {{
+      const providers = ["openai", "anthropic", "gemini", "openai_compatible", "lmstudio", "ollama"];
+      return providers.map(p => `<option value="${{p}}" ${{p===selected?'selected':''}}>${{p}}</option>`).join('');
+    }}
+    function endpointOptions(providerType, selectedKey) {{
+      const filtered = (ENDPOINT_CACHE || []).filter(e => e.provider_type === providerType);
+      const base = ['<option value="">(senza endpoint)</option>'];
+      filtered.forEach(e => base.push(`<option value="${{e.endpoint_key}}" ${{e.endpoint_key===selectedKey?'selected':''}}>${{e.endpoint_key}} · ${{e.label}}</option>`));
+      return base.join('');
+    }}
+    function modelOptions(providerType, selectedModel) {{
+      const catalog = AGENT_MODELS_CATALOG[providerType] || [];
+      const inCatalog = catalog.includes(selectedModel);
+      const options = catalog.map(m => `<option value="${{m}}" ${{m===selectedModel?'selected':''}}>${{m}}</option>`);
+      options.push(`<option value="__custom__" ${{inCatalog ? '' : 'selected'}}>custom...</option>`);
+      return {{ html: options.join(''), customValue: inCatalog ? '' : selectedModel }};
+    }}
+    function renderAgentRows(items) {{
+      if (!items || items.length === 0) return '<div style="color:#999">Nessun agente configurato.</div>';
+      return items.map(a => {{
+        AGENT_CACHE[a.agent_key] = a;
+        const modelSel = modelOptions(a.provider_type, a.model_id || '');
+        const status = a.enabled ? '🟢 attivo' : '🔴 disattivo';
+        return `<div style="padding:8px 0;border-bottom:1px solid #202630">
+          <b>${{a.role_key || 'role?'}}</b> · ${{a.label || a.agent_key}} · <span style="color:#9ca3af">${{status}}</span><br>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 130px;gap:8px;margin-top:8px;align-items:center">
+            <select id="agent-provider-${{a.agent_key}}" onchange="agenticRefreshModelAndEndpoints('${{a.agent_key}}')" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:6px;border-radius:6px">
+              ${{providerOptions(a.provider_type)}}
+            </select>
+            <select id="agent-model-${{a.agent_key}}" onchange="agenticToggleCustomModel('${{a.agent_key}}')" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:6px;border-radius:6px">
+              ${{modelSel.html}}
+            </select>
+            <select id="agent-endpoint-${{a.agent_key}}" style="background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:6px;border-radius:6px">
+              ${{endpointOptions(a.provider_type, a.endpoint_key || '')}}
+            </select>
+            <label style="font-size:12px;color:#9ca3af"><input type="checkbox" id="agent-enabled-${{a.agent_key}}" ${{a.enabled?'checked':''}}> enabled</label>
+          </div>
+          <input id="agent-custom-model-${{a.agent_key}}" type="text" value="${{modelSel.customValue}}" placeholder="Model ID custom (LM Studio/Ollama/OpenAI-compatible)" style="margin-top:8px;display:${{modelSel.customValue?'block':'none'}};width:100%;background:#0b0e13;border:1px solid #2a2f3a;color:#e5e7eb;padding:7px;border-radius:6px">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button type="button" class="btn btn-primary" style="padding:5px 10px" onclick="agenticSaveAgent('${{a.agent_key}}')">Salva agente</button>
+            <button type="button" class="btn" style="padding:5px 10px" onclick="agenticTest('${{a.agent_key}}')">Test</button>
+          </div>
+        </div>`;
+      }}).join('');
+    }}
+    function renderEndpoints(rows) {{
+      if (!rows || rows.length === 0) return '<div style="color:#999">Nessun endpoint registrato.</div>';
+      return rows.map(e => `<div style="padding:6px 0;border-bottom:1px solid #202630"><b>${{e.endpoint_key}}</b> · ${{e.provider_type}} · <span style="color:#9ca3af">${{e.base_url || '(n/d)'}} </span></div>`).join('');
+    }}
+    function renderMcpTokens(rows) {{
+      if (!rows || rows.length === 0) return '<div style="color:#999">Nessun token MCP configurato.</div>';
+      return rows.map(t => `<div style="padding:6px 0;border-bottom:1px solid #202630">
+        <b>${{t.token_id}}</b> · tenant=<span style="color:#9ca3af">${{t.tenant_id}}</span> · scope=<span style="color:#9ca3af">${{t.scope}}</span> · rpm=<span style="color:#9ca3af">${{t.rate_limit_per_minute}}</span> · max_cap=<span style="color:#9ca3af">${{t.max_cap_id || '-'}} </span> · ${{t.enabled ? '🟢 enabled' : '🔴 disabled'}}
+      </div>`).join('');
+    }}
+    function setAgenticStatus(obj) {{
+      const box = document.getElementById('agentic-status');
+      box.style.display = 'block';
+      box.textContent = JSON.stringify(obj, null, 2);
+    }}
+    async function agenticLoadRegistry() {{
+      try {{
+        AGENT_CACHE = {{}};
+        const [reader, author] = await Promise.all([
+          agenticApi('/api/agents?mode=reader'),
+          agenticApi('/api/agents?mode=author')
+        ]);
+        ENDPOINT_CACHE = author.endpoints || reader.endpoints || [];
+        document.getElementById('agentic-reader-list').innerHTML = renderAgentRows(reader.agents || []);
+        document.getElementById('agentic-author-list').innerHTML = renderAgentRows(author.agents || []);
+        document.getElementById('agentic-endpoints-list').innerHTML = renderEndpoints(ENDPOINT_CACHE);
+        try {{
+          const tok = await agenticApi('/api/mcp/tokens');
+          document.getElementById('agentic-mcp-tokens-list').innerHTML = renderMcpTokens(tok.items || []);
+        }} catch (tokErr) {{
+          document.getElementById('agentic-mcp-tokens-list').innerHTML = `<div style="color:#cf6f6f">${{String(tokErr)}}</div>`;
+        }}
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    function agenticToggleCustomModel(agentKey) {{
+      const select = document.getElementById(`agent-model-${{agentKey}}`);
+      const custom = document.getElementById(`agent-custom-model-${{agentKey}}`);
+      if (!select || !custom) return;
+      custom.style.display = select.value === "__custom__" ? "block" : "none";
+    }}
+    function agenticRefreshModelAndEndpoints(agentKey) {{
+      const providerSelect = document.getElementById(`agent-provider-${{agentKey}}`);
+      const modelSelect = document.getElementById(`agent-model-${{agentKey}}`);
+      const endpointSelect = document.getElementById(`agent-endpoint-${{agentKey}}`);
+      if (!providerSelect || !modelSelect || !endpointSelect) return;
+      const provider = providerSelect.value;
+      const cached = AGENT_CACHE[agentKey] || {{}};
+      const modelSel = modelOptions(provider, cached.model_id || "");
+      modelSelect.innerHTML = modelSel.html;
+      endpointSelect.innerHTML = endpointOptions(provider, cached.endpoint_key || "");
+      const custom = document.getElementById(`agent-custom-model-${{agentKey}}`);
+      if (custom) {{
+        custom.value = modelSel.customValue || "";
+        custom.style.display = modelSel.customValue ? "block" : "none";
+      }}
+    }}
+    async function agenticBootstrap() {{
+      try {{
+        const data = await agenticApi('/api/agents/bootstrap', {{method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: JSON.stringify({{}})}});
+        setAgenticStatus(data);
+        agenticLoadRegistry();
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function agenticReadiness() {{
+      try {{
+        const data = await agenticApi('/api/agentic/readiness');
+        setAgenticStatus(data);
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function agenticValidate(mode) {{
+      try {{
+        const data = await agenticApi(`/api/agents/validate?mode=${{encodeURIComponent(mode)}}`);
+        setAgenticStatus(data);
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function agenticTest(agentKey) {{
+      try {{
+        const data = await agenticApi('/api/agents/test', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify({{agent_key: agentKey, prompt: 'Rispondi solo con: OK'}})
+        }});
+        setAgenticStatus(data);
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function agenticSaveAgent(agentKey) {{
+      try {{
+        const cached = AGENT_CACHE[agentKey];
+        if (!cached) throw new Error(`Agente non trovato in cache: ${{agentKey}}`);
+        const provider = document.getElementById(`agent-provider-${{agentKey}}`).value;
+        const modelSel = document.getElementById(`agent-model-${{agentKey}}`).value;
+        const modelCustom = (document.getElementById(`agent-custom-model-${{agentKey}}`).value || "").trim();
+        const endpointKey = document.getElementById(`agent-endpoint-${{agentKey}}`).value;
+        const enabled = !!document.getElementById(`agent-enabled-${{agentKey}}`).checked;
+        const modelId = modelSel === "__custom__" ? modelCustom : modelSel;
+        if (!modelId) throw new Error("Model ID obbligatorio");
+        const payload = {{
+          agent_key: cached.agent_key,
+          label: cached.label,
+          mode: cached.mode,
+          role_key: cached.role_key,
+          provider_type: provider,
+          endpoint_key: endpointKey,
+          model_id: modelId,
+          temperature: cached.temperature,
+          max_tokens: cached.max_tokens,
+          timeout_sec: cached.timeout_sec,
+          priority: cached.priority,
+          enabled: enabled
+        }};
+        const data = await agenticApi('/api/agents/save', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify(payload)
+        }});
+        setAgenticStatus(data);
+        await agenticLoadRegistry();
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function agenticSaveEndpoint() {{
+      try {{
+        const payload = {{
+          endpoint_key: (document.getElementById('agentic-ep-key').value || '').trim(),
+          label: (document.getElementById('agentic-ep-label').value || '').trim(),
+          provider_type: document.getElementById('agentic-ep-provider').value,
+          base_url: (document.getElementById('agentic-ep-url').value || '').trim(),
+          api_key_env: (document.getElementById('agentic-ep-keyenv').value || '').trim(),
+          supports_discovery: !!document.getElementById('agentic-ep-discovery').checked,
+          is_local: !!document.getElementById('agentic-ep-local').checked,
+          enabled: !!document.getElementById('agentic-ep-enabled').checked
+        }};
+        const data = await agenticApi('/api/provider-endpoints/save', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify(payload)
+        }});
+        setAgenticStatus(data);
+        await agenticLoadRegistry();
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function mcpSaveToken() {{
+      try {{
+        const payload = {{
+          token_id: (document.getElementById('mcp-token-id').value || '').trim(),
+          token: (document.getElementById('mcp-token-secret').value || '').trim(),
+          label: (document.getElementById('mcp-token-label').value || '').trim(),
+          tenant_id: (document.getElementById('mcp-token-tenant').value || '').trim(),
+          scope: document.getElementById('mcp-token-scope').value,
+          max_cap_id: (document.getElementById('mcp-token-max-cap').value || '').trim(),
+          rate_limit_per_minute: Number(document.getElementById('mcp-token-rpm').value || 60),
+          enabled: !!document.getElementById('mcp-token-enabled').checked
+        }};
+        const data = await agenticApi('/api/mcp/tokens/save', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify(payload)
+        }});
+        setAgenticStatus(data);
+        await agenticLoadRegistry();
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function mcpRotateToken() {{
+      try {{
+        const tokenId = (document.getElementById('mcp-token-id').value || '').trim();
+        const newToken = (document.getElementById('mcp-token-secret').value || '').trim();
+        if (!tokenId || !newToken) throw new Error('token_id e token sono obbligatori per rotazione');
+        const data = await agenticApi(`/api/mcp/tokens/${{encodeURIComponent(tokenId)}}/rotate`, {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify({{new_token: newToken}})
+        }});
+        setAgenticStatus(data);
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function mcpDeleteToken() {{
+      try {{
+        const tokenId = (document.getElementById('mcp-token-id').value || '').trim();
+        if (!tokenId) throw new Error('token_id obbligatorio');
+        const data = await agenticApi(`/api/mcp/tokens/${{encodeURIComponent(tokenId)}}`, {{ method: 'DELETE' }});
+        setAgenticStatus(data);
+        await agenticLoadRegistry();
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function mcpLoadAuditAnalytics() {{
+      try {{
+        const data = await agenticApi('/api/mcp/audit/analytics?days=7');
+        setAgenticStatus(data);
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    async function mcpCleanupAudit() {{
+      try {{
+        const days = prompt('Retention giorni audit MCP (default 30):', '30');
+        if (days === null) return;
+        const data = await agenticApi('/api/mcp/audit/cleanup', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify({{retention_days: Number(days || 30)}})
+        }});
+        setAgenticStatus(data);
+      }} catch (err) {{
+        setAgenticStatus({{status: 'error', message: String(err)}});
+      }}
+    }}
+    agenticLoadRegistry();
     </script>
     """
     return render_template_string(ADMIN_LAYOUT, title="Settings", content=body, all_caps_html=all_caps_html, BASE_CSS=BASE_CSS, project_title=get_project_title())
@@ -5745,3 +7409,7 @@ Fornisci un feedback puntuale, segnalando eventuali 'Red Flags' (incoerenze grav
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True, port=5000)
+    embedding_provider = (data.get("embedding_provider") or get_env_var("VECTOR_EMBEDDING_PROVIDER", "hash_local")).strip() or "hash_local"
+    embedding_model = (data.get("embedding_model") or get_env_var("VECTOR_EMBEDDING_MODEL", "")).strip()
+    embedding_base_url = (data.get("embedding_base_url") or get_env_var("VECTOR_EMBEDDING_BASE_URL", "")).strip()
+    embedding_api_key = (data.get("embedding_api_key") or get_env_var("VECTOR_EMBEDDING_API_KEY", "")).strip()

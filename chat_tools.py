@@ -2,6 +2,7 @@ import json
 import os
 import sqlite3
 from typing import Any, Dict, List
+from vector_index_local import ensure_schema as ensure_vector_schema, search_index as vector_search_index, index_stats as vector_index_stats
 
 ALLOWED_UPDATE_FIELDS = {
     "titolo", "pov", "luogo", "data_narrativa", "descrizione", "personaggi_precedenti", "personaggi_successivi",
@@ -19,6 +20,9 @@ READ_ONLY_TOOLS = {
     "search_passages",
     "list_chapters_range",
     "get_recent_tool_runs",
+    "vector_search_reader",
+    "vector_search_author",
+    "vector_index_stats",
 }
 
 MUTATING_TOOLS = {
@@ -53,6 +57,18 @@ TOOL_SPECS: Dict[str, Dict[str, Any]] = {
     "get_recent_tool_runs": {
         "description": "Audit ultimi tool run (globale o per session_key).",
         "args": {"session_key": "str (opzionale)", "limit": "int 1..100"},
+    },
+    "vector_search_reader": {
+        "description": "Ricerca locale su indice capitoli con frontier anti-spoiler (cap_id <= frontier).",
+        "args": {"query": "str (obbligatorio)", "cap_id": "int (obbligatorio)", "k": "int 1..20"},
+    },
+    "vector_search_author": {
+        "description": "Ricerca locale su indice capitoli full-canon (author mode).",
+        "args": {"query": "str (obbligatorio)", "k": "int 1..20"},
+    },
+    "vector_index_stats": {
+        "description": "Statistiche indice locale (chunks, capitoli, timestamp).",
+        "args": {},
     },
     "update_chapter_fields": {
         "description": "Aggiorna campi metadata capitolo in modalità admin.",
@@ -247,6 +263,34 @@ def execute_tool(conn: sqlite3.Connection, tool_name: str, arguments: Dict[str, 
                 str(args.get("session_key", "")),
                 _to_int(args.get("limit", 20), "limit", 1, 100),
             )
+        if name == "vector_search_reader":
+            ensure_vector_schema(conn)
+            cap_id = _to_int(args.get("cap_id"), "cap_id", minimum=1)
+            return vector_search_index(
+                conn,
+                str(args.get("query", "")),
+                k=_to_int(args.get("k", 5), "k", 1, 20),
+                max_cap_id=cap_id,
+                embedding_provider=os.getenv("VECTOR_EMBEDDING_PROVIDER", "hash_local"),
+                embedding_model=os.getenv("VECTOR_EMBEDDING_MODEL", ""),
+                embedding_base_url=os.getenv("VECTOR_EMBEDDING_BASE_URL", ""),
+                embedding_api_key=os.getenv("VECTOR_EMBEDDING_API_KEY", ""),
+            )
+        if name == "vector_search_author":
+            ensure_vector_schema(conn)
+            return vector_search_index(
+                conn,
+                str(args.get("query", "")),
+                k=_to_int(args.get("k", 5), "k", 1, 20),
+                max_cap_id=None,
+                embedding_provider=os.getenv("VECTOR_EMBEDDING_PROVIDER", "hash_local"),
+                embedding_model=os.getenv("VECTOR_EMBEDDING_MODEL", ""),
+                embedding_base_url=os.getenv("VECTOR_EMBEDDING_BASE_URL", ""),
+                embedding_api_key=os.getenv("VECTOR_EMBEDDING_API_KEY", ""),
+            )
+        if name == "vector_index_stats":
+            ensure_vector_schema(conn)
+            return vector_index_stats(conn)
         if name == "update_chapter_fields":
             return update_chapter_fields(
                 conn,
@@ -280,3 +324,81 @@ def available_tools_catalog(admin_mode: bool = False) -> List[Dict[str, Any]]:
             }
         )
     return items
+
+
+def normalize_tool_plan(plan: Any, max_steps: int = 8) -> Dict[str, Any]:
+    if not isinstance(plan, list):
+        return {"ok": False, "error": "tool_plan deve essere una lista"}
+    normalized = []
+    for idx, step in enumerate(plan):
+        if len(normalized) >= max_steps:
+            break
+        if not isinstance(step, dict):
+            return {"ok": False, "error": f"Step {idx} non valido: deve essere un oggetto"}
+        tool_name = str(step.get("tool", "")).strip()
+        if not tool_name:
+            return {"ok": False, "error": f"Step {idx} non valido: tool mancante"}
+        args = step.get("arguments", {})
+        if args is None:
+            args = {}
+        if not isinstance(args, dict):
+            return {"ok": False, "error": f"Step {idx} non valido: arguments deve essere un oggetto"}
+        normalized.append({"tool": tool_name, "arguments": args})
+    if not normalized:
+        return {"ok": False, "error": "tool_plan vuoto"}
+    return {"ok": True, "plan": normalized}
+
+
+def execute_tool_plan(
+    conn: sqlite3.Connection,
+    plan: Any,
+    admin_mode: bool = False,
+    allowed_tools: List[str] = None,
+    stop_on_error: bool = False,
+) -> Dict[str, Any]:
+    normalized = normalize_tool_plan(plan)
+    if not normalized.get("ok"):
+        return {"ok": False, "error": normalized.get("error", "tool_plan non valido"), "runs": []}
+    steps = normalized["plan"]
+
+    allowed_set = set(str(t).strip() for t in (allowed_tools or []) if str(t).strip())
+    enforce_scope = len(allowed_set) > 0
+    runs = []
+    has_error = False
+
+    for i, step in enumerate(steps, start=1):
+        tool_name = step["tool"]
+        args = step["arguments"]
+        if enforce_scope and tool_name not in allowed_set:
+            run = {
+                "index": i,
+                "tool": tool_name,
+                "status": "blocked",
+                "result": {"ok": False, "error": f"Tool fuori scope: {tool_name}"},
+            }
+            runs.append(run)
+            has_error = True
+            if stop_on_error:
+                break
+            continue
+
+        result = execute_tool(conn, tool_name, args, admin_mode=admin_mode)
+        run = {
+            "index": i,
+            "tool": tool_name,
+            "status": "ok" if result.get("ok") else "error",
+            "result": result,
+        }
+        runs.append(run)
+        if not result.get("ok"):
+            has_error = True
+            if stop_on_error:
+                break
+
+    return {
+        "ok": not has_error,
+        "runs": runs,
+        "executed": sum(1 for r in runs if r.get("status") == "ok"),
+        "blocked": sum(1 for r in runs if r.get("status") == "blocked"),
+        "errors": sum(1 for r in runs if r.get("status") == "error"),
+    }

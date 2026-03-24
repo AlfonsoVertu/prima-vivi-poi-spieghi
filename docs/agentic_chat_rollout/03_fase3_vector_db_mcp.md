@@ -4,6 +4,39 @@
 
 Preparare l'opera finita e i metadati per retrieval semantico locale e interrogazione da server MCP esterno.
 
+## Stato implementativo corrente (aggiornato)
+
+### ✅ Completato nel codice
+
+- Indicizzazione locale con `vector_index_local.py`:
+  - chunking + embedding locale/fallback;
+  - rebuild/search/stats;
+  - versioning indice (`vector_index_versions`, `active_version`, `list_index_versions`).
+- Endpoint vector:
+  - `GET /api/vector-index/stats`
+  - `GET /api/vector-index/versions`
+  - `POST /api/vector-index/rebuild`
+  - `POST /api/vector-index/refresh` (delta per `cap_ids`)
+  - `GET /api/vector-index/search`
+- MCP bridge hardening:
+  - `POST /api/mcp/vector-search` con auth bearer policy-based;
+  - rate-limit persistente SQLite;
+  - audit avanzato su token/client (`mcp_bridge_audit`);
+  - policy token scope `reader/author/both`, `tenant_id`, `max_cap_id`.
+- Endpoint meta MCP:
+  - `GET /api/mcp/health`
+  - `GET /api/mcp/capabilities`
+  - `GET /api/mcp/list_vector_index_versions` (bearer).
+- Operatività enterprise MCP:
+  - CRUD token + rotazione: `/api/mcp/tokens*`;
+  - analytics audit: `GET /api/mcp/audit/analytics`;
+  - cleanup retention: `POST /api/mcp/audit/cleanup`.
+
+### 🔄 Residuo fase 3
+
+- Alerting e KPI operativi (p95 latency, unauthorized spike, saturation rate-limit).
+- Test E2E runtime HTTP/streaming in ambiente completo.
+
 ## Task 3.1 — Pipeline di export dell'opera
 
 ### Implementazione operativa
@@ -66,6 +99,18 @@ Definire query stabili, ad esempio:
 
 Lo stesso contratto può essere usato sia dalla chat interna sia da un server MCP esterno.
 
+### Stato attuale task 3.3
+
+Parzialmente completato e operativo:
+
+- query semantica condivisa via `vector_search_*` e `search_index(...)`;
+- `list_vector_index_versions()` disponibile;
+- endpoint bridge/read-only disponibili e documentati.
+
+Da estendere in futuro:
+
+- query bundle dedicate (`get_chapter_bundle`, `get_character_bundle`, `get_timeline_bundle`).
+
 ---
 
 ## Task 3.4 — Boundary spoiler anche su MCP
@@ -79,3 +124,12 @@ Lo stesso contratto può essere usato sia dalla chat interna sia da un server MC
 ### Criterio di accettazione
 
 L'apertura verso MCP non reintroduce spoiler leakage nel ramo lettore.
+
+### Stato attuale task 3.4
+
+Completato a livello policy endpoint:
+
+- `mode=reader` richiede `cap_id` valido;
+- policy token con `scope` e limite `max_cap_id`;
+- blocco 403 su scope/cap non compatibili;
+- audit degli esiti (unauthorized, forbidden_scope, forbidden_cap, rate_limited, ok/error).

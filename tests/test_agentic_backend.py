@@ -15,7 +15,8 @@ from agent_registry import (
     get_discovery_cache,
     readiness_report,
 )
-from chat_tools import execute_tool, available_tools_catalog
+from chat_tools import execute_tool, available_tools_catalog, normalize_tool_plan, execute_tool_plan
+from vector_index_local import ensure_schema as ensure_vector_schema, rebuild_index as vector_rebuild_index, list_index_versions, refresh_index_for_chapters
 
 
 def build_test_conn() -> sqlite3.Connection:
@@ -79,6 +80,7 @@ def build_test_conn() -> sqlite3.Connection:
         "INSERT INTO chat_tool_runs (session_id, agent_id, tool_name, arguments_json, result_json, status, duration_ms) "
         "SELECT id, NULL, 'search_passages', '{}', '{\"ok\": true}', 'ok', 3 FROM chat_sessions WHERE session_key='sess-1'"
     )
+    ensure_vector_schema(conn)
     conn.commit()
     return conn
 
@@ -141,6 +143,8 @@ class AgenticBackendTests(unittest.TestCase):
         self.assertIn("list_chapters_range", names)
         self.assertIn("get_recent_tool_runs", names)
         self.assertIn("update_chapter_fields", names)
+        self.assertIn("vector_search_reader", names)
+        self.assertIn("vector_search_author", names)
 
         r1 = execute_tool(
             self.conn,
@@ -167,6 +171,111 @@ class AgenticBackendTests(unittest.TestCase):
         bad = execute_tool(self.conn, "search_passages", {"query": "cap", "limit": "oops"}, admin_mode=False)
         self.assertFalse(bad["ok"])
         self.assertIn("intero", bad["error"])
+
+    def test_vector_tools_with_local_index(self):
+        chapters = [dict(r) for r in self.conn.execute("SELECT * FROM capitoli ORDER BY id").fetchall()]
+        result = vector_rebuild_index(
+            self.conn,
+            chapters,
+            lambda cid: f"capitolo {cid} testo locale prova simbolo vash lin",
+            chunk_size=20,
+            overlap=5,
+            embedding_provider="hash_local",
+            embedding_model="",
+        )
+        self.assertTrue(result["ok"])
+        self.assertTrue((result.get("version_tag") or "").startswith("v_"))
+        stats = execute_tool(self.conn, "vector_index_stats", {}, admin_mode=False)
+        self.assertTrue(stats["ok"])
+        self.assertGreater(stats["chunks"], 0)
+        self.assertEqual(stats["embedding_provider"], "hash_local")
+        self.assertTrue((stats.get("active_version") or "").startswith("v_"))
+        versions = list_index_versions(self.conn, limit=5)
+        self.assertTrue(versions["ok"])
+        self.assertGreaterEqual(len(versions["items"]), 1)
+        s_reader = execute_tool(self.conn, "vector_search_reader", {"query": "vash", "cap_id": 2, "k": 3}, admin_mode=False)
+        self.assertTrue(s_reader["ok"])
+        self.assertTrue(all(r["cap_id"] <= 2 for r in s_reader["results"]))
+        self.assertIn("search_mode", s_reader)
+        s_author = execute_tool(self.conn, "vector_search_author", {"query": "lin", "k": 3}, admin_mode=True)
+        self.assertTrue(s_author["ok"])
+        if s_author["results"]:
+            self.assertIn("score", s_author["results"][0])
+
+    def test_vector_incremental_refresh(self):
+        chapters = [dict(r) for r in self.conn.execute("SELECT * FROM capitoli ORDER BY id").fetchall()]
+        base = vector_rebuild_index(
+            self.conn,
+            chapters,
+            lambda cid: f"base text cap {cid}",
+            chunk_size=20,
+            overlap=5,
+            embedding_provider="hash_local",
+            embedding_model="",
+        )
+        self.assertTrue(base["ok"])
+        refreshed = refresh_index_for_chapters(
+            self.conn,
+            chapters,
+            lambda cid: f"delta aggiornato cap {cid}",
+            cap_ids=[2, 3],
+            chunk_size=20,
+            overlap=5,
+            embedding_provider="hash_local",
+            embedding_model="",
+        )
+        self.assertTrue(refreshed["ok"])
+        self.assertEqual(refreshed["mode"], "incremental_refresh")
+        self.assertEqual(refreshed["cap_ids_updated"], [2, 3])
+        self.assertTrue((refreshed.get("version_tag") or "").endswith("_delta"))
+        stats = execute_tool(self.conn, "vector_index_stats", {}, admin_mode=False)
+        self.assertTrue(stats["ok"])
+        self.assertTrue((stats.get("active_version") or "").endswith("_delta"))
+
+    def test_mcp_hardening_schema_tables_exist(self):
+        row_tokens = self.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='mcp_bridge_tokens'"
+        ).fetchone()
+        row_rate = self.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='mcp_bridge_rate_limits'"
+        ).fetchone()
+        row_audit = self.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='mcp_bridge_audit'"
+        ).fetchone()
+        self.assertIsNotNone(row_tokens)
+        self.assertIsNotNone(row_rate)
+        self.assertIsNotNone(row_audit)
+
+    def test_tool_plan_normalization_and_execution(self):
+        bad_plan = normalize_tool_plan({"tool": "list_chapters_range"})
+        self.assertFalse(bad_plan["ok"])
+
+        dry_plan = normalize_tool_plan([
+            {"tool": "list_chapters_range", "arguments": {"start_cap_id": 1, "end_cap_id": 2, "limit": 2}},
+            {"tool": "update_chapter_fields", "arguments": {"cap_id": 1, "patch": {"titolo": "X"}, "dry_run": True}},
+        ])
+        self.assertTrue(dry_plan["ok"])
+        self.assertEqual(len(dry_plan["plan"]), 2)
+
+        reader_exec = execute_tool_plan(
+            self.conn,
+            dry_plan["plan"],
+            admin_mode=False,
+            allowed_tools=["list_chapters_range", "update_chapter_fields"],
+            stop_on_error=False,
+        )
+        self.assertFalse(reader_exec["ok"])
+        self.assertEqual(reader_exec["errors"], 1)  # update_chapter_fields bloccato da permesso execute_tool
+
+        scoped_exec = execute_tool_plan(
+            self.conn,
+            dry_plan["plan"],
+            admin_mode=True,
+            allowed_tools=["list_chapters_range"],  # secondo tool fuori scope
+            stop_on_error=False,
+        )
+        self.assertFalse(scoped_exec["ok"])
+        self.assertEqual(scoped_exec["blocked"], 1)
 
     def test_registry_export_import_bundle(self):
         upsert_provider_endpoint(

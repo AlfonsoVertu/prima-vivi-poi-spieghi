@@ -38,3 +38,4 @@ Ultimo aggiornamento: 2026-03-24
 3. Fase 3.7: policy di retention automatizzata + export periodico audit.
 
 - 2026-04-01: avviata implementazione reader-orchestrator v2 con agent config JSON, tool layer read-only e integrazione endpoint /api/chat (reader path).
+- 2026-04-01: fix bloccanti PR reader v2: una sola synthesis finale, enforcement allowed_tools archivist, metadata whitelist reader-safe, validator rinominato come guard lessicale anti-spoiler/predittivo.

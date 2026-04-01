@@ -1,4 +1,4 @@
-from chat_tools import tool_chapter_summary, tool_timeline_lookup, tool_chapter_text
+from chat_tools import tool_chapter_summary, tool_timeline_lookup, tool_chapter_text, tool_metadata_lookup
 
 
 def test_reader_summary_no_future():
@@ -19,3 +19,13 @@ def test_reader_chapter_text_current_only():
     assert out["ok"]
     assert "current" in out
     assert "previous" not in out
+
+
+def test_reader_metadata_whitelist_no_spoiler_fields():
+    out = tool_metadata_lookup(5, admin_mode=False)
+    assert out["ok"]
+    md = out["metadata"]
+    assert "riassunto_capitolo_successivo" not in md
+    assert "personaggi_successivi" not in md
+    assert "transizione_prossimo_capitolo" not in md
+    assert "hook_finale" not in md

@@ -14,7 +14,8 @@ def test_api_chat_reader_uses_v2_and_no_write(monkeypatch):
 
     def fake_v2(*args, **kwargs):
         called["v2"] = True
-        yield f"data: {json.dumps({'stage': 'synthesis', 'content': 'ok'})}\n\n"
+        yield f"data: {json.dumps({'stage': 'synthesis', 'content': 'DRAFT'})}\n\n"
+        yield f"data: {json.dumps({'stage': 'synthesis', 'content': 'FINAL'})}\n\n"
         yield "data: [DONE]\n\n"
 
     monkeypatch.setattr(app_module, "write_txt", fake_write)
@@ -28,6 +29,6 @@ def test_api_chat_reader_uses_v2_and_no_write(monkeypatch):
     )
     assert r.status_code == 200
     payload = r.get_json()
-    assert payload["reply"] == "ok"
+    assert payload["reply"] == "FINAL"
     assert called["v2"] is True
     assert called["write"] is False

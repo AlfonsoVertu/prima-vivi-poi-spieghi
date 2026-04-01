@@ -3241,7 +3241,7 @@ def api_chat(cap_id):
             if not admin_mode:
                 from reader_orchestrator_v2 import run_reader_orchestrator_stream
                 agent_cfgs = load_agent_configs()
-                chunks = []
+                final_reply = ""
                 for chunk_sse in run_reader_orchestrator_stream(
                     cap_id,
                     user_msg,
@@ -3257,8 +3257,8 @@ def api_chat(cap_id):
                 ):
                     payload = parse_sse_payload(chunk_sse)
                     if payload and payload.get("stage") == "synthesis":
-                        chunks.append(payload.get("content", ""))
-                reply = "".join(chunks).strip()
+                        final_reply = str(payload.get("content", "") or "")
+                reply = final_reply.strip()
                 spoiler_audit = {"status": "skipped", "violations": []}
                 rewritten = False
                 debug = {"reader_v2": True}

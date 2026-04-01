@@ -495,12 +495,16 @@ def tool_metadata_lookup(cap_id: int, admin_mode: bool, fields: list[str] | None
         if not row:
             return {"ok": False, "error": "capitolo non trovato"}
         data = dict(row)
-        if fields:
-            keep = {k: data.get(k) for k in fields if k in data}
+        if admin_mode:
+            keep = {k: data.get(k) for k in fields if k in data} if fields else data
         else:
-            keep = data
-        if not admin_mode and "riassunto_capitolo_successivo" in keep:
-            keep.pop("riassunto_capitolo_successivo", None)
+            reader_whitelist = {
+                "id", "titolo", "pov", "luogo", "data_narrativa", "descrizione",
+                "riassunto", "timeline_capitolo", "personaggi_capitolo",
+                "luogo_macro", "linea_narrativa", "stato", "anno",
+            }
+            allow = reader_whitelist.intersection(set(fields)) if fields else reader_whitelist
+            keep = {k: data.get(k) for k in allow if k in data}
         return {"ok": True, "metadata": keep}
     finally:
         conn.close()
@@ -517,7 +521,7 @@ def tool_canon_constraints(cap_id: int, admin_mode: bool) -> dict:
     }
 
 
-def tool_future_consistency_check(candidate_text: str, cap_id: int) -> dict:
+def tool_spoiler_predictive_guard(candidate_text: str, cap_id: int) -> dict:
     text = (candidate_text or "").lower()
     issues = []
     hints = []
@@ -531,3 +535,8 @@ def tool_future_consistency_check(candidate_text: str, cap_id: int) -> dict:
     if "forse" in text and "succeder" in text:
         return {"ok": True, "severity": "soft", "issues": [{"type": "predictive_tone", "explanation": "Tono predittivo da ammorbidire."}], "rewrite_hints": ["Usa formulazioni centrate sul presente narrativo."]}
     return {"ok": True, "severity": "none", "issues": [], "rewrite_hints": []}
+
+
+def tool_future_consistency_check(candidate_text: str, cap_id: int) -> dict:
+    """Alias retrocompatibile: in questa fase è un guard lessicale anti-spoiler/predizione."""
+    return tool_spoiler_predictive_guard(candidate_text, cap_id)

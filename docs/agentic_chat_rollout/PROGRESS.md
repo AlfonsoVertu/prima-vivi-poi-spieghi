@@ -36,3 +36,7 @@ Ultimo aggiornamento: 2026-03-24
 1. Fase 3.5: test E2E HTTP/streaming su runtime agentico + MCP bridge in ambiente con dipendenze complete.
 2. Fase 3.6: alerting operativo su KPI MCP (rate-limit saturation, unauthorized spike, latency p95).
 3. Fase 3.7: policy di retention automatizzata + export periodico audit.
+
+- 2026-04-01: avviata implementazione reader-orchestrator v2 con agent config JSON, tool layer read-only e integrazione endpoint /api/chat (reader path).
+- 2026-04-01: fix bloccanti PR reader v2: una sola synthesis finale, enforcement allowed_tools archivist, metadata whitelist reader-safe, validator rinominato come guard lessicale anti-spoiler/predittivo.
+- 2026-04-01: hardening finale PR #3: temperature propagata nel runtime agentico, helper path reader centralizzati, fallback config agente robusti e test aggiuntivi di coerenza runtime/config.

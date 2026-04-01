@@ -1,0 +1,82 @@
+{
+  "reader": {
+    "reader_intent_router": {
+      "enabled": true,
+      "provider": "openai",
+      "model": "gpt-5-mini",
+      "system_prompt": "Classifica l'intento del lettore senza rispondere.",
+      "allowed_tools": [],
+      "temperature": 0.1,
+      "max_tokens": 500
+    },
+    "reader_scope_planner": {
+      "enabled": true,
+      "provider": "openai",
+      "model": "gpt-5-mini",
+      "system_prompt": "Decidi profondità e fonti da interrogare.",
+      "allowed_tools": [],
+      "temperature": 0.1,
+      "max_tokens": 500
+    },
+    "reader_archivist": {
+      "enabled": true,
+      "provider": "anthropic",
+      "model": "claude-3-7-sonnet-20250219",
+      "system_prompt": "Recupera fatti canonici accessibili fino all'orizzonte lettore.",
+      "allowed_tools": [
+        "tool_book_index",
+        "tool_chapter_summary",
+        "tool_timeline_lookup",
+        "tool_character_state",
+        "tool_chapter_text",
+        "tool_metadata_lookup",
+        "tool_canon_constraints"
+      ],
+      "temperature": 0.2,
+      "max_tokens": 1200
+    },
+    "reader_transformer": {
+      "enabled": true,
+      "provider": "google",
+      "model": "gemini-2.0-pro-exp-02-05",
+      "system_prompt": "Trasforma il dossier in racconto o spiegazione coerente.",
+      "allowed_tools": [
+        "tool_chapter_text",
+        "tool_character_state",
+        "tool_metadata_lookup"
+      ],
+      "temperature": 0.7,
+      "max_tokens": 2000
+    },
+    "future_coherence_validator": {
+      "enabled": true,
+      "provider": "openai",
+      "model": "o3-mini",
+      "system_prompt": "Valida bozza con guard anti-spoiler/predittivo (non full future-canon).",
+      "allowed_tools": [
+        "tool_spoiler_predictive_guard"
+      ],
+      "temperature": 0.0,
+      "max_tokens": 800
+    },
+    "reader_spoiler_guard": {
+      "enabled": true,
+      "provider": "openai",
+      "model": "gpt-5-mini",
+      "system_prompt": "Blocca spoiler, anticipazioni e leak.",
+      "allowed_tools": [],
+      "temperature": 0.0,
+      "max_tokens": 800
+    },
+    "reader_final_voice": {
+      "enabled": true,
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "system_prompt": "Rispondi come voce dell'Archivio, in read-only.",
+      "allowed_tools": [],
+      "temperature": 0.6,
+      "max_tokens": 2200
+    }
+  },
+  "admin": {}
+}

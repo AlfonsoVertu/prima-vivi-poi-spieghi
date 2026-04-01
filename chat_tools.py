@@ -4,6 +4,21 @@ import sqlite3
 from typing import Any, Dict, List
 from vector_index_local import ensure_schema as ensure_vector_schema, search_index as vector_search_index, index_stats as vector_index_stats
 
+DEFAULT_DB_PATH = os.getenv("ROMAN_DB_PATH", "roman.db")
+DEFAULT_CHAPTERS_DIR = os.getenv("CAPITOLI_DIR", "capitoli")
+
+
+def get_db_path() -> str:
+    return DEFAULT_DB_PATH
+
+
+def get_chapters_dir() -> str:
+    return DEFAULT_CHAPTERS_DIR
+
+
+def get_chapter_path(cap_id: int) -> str:
+    return os.path.join(get_chapters_dir(), f"cap{int(cap_id):02d}.txt")
+
 ALLOWED_UPDATE_FIELDS = {
     "titolo", "pov", "luogo", "data_narrativa", "descrizione", "personaggi_precedenti", "personaggi_successivi",
     "background", "parallelo", "obiettivi_personaggi", "timeline_capitolo", "timeline_opera", "riassunto",
@@ -402,3 +417,141 @@ def execute_tool_plan(
         "blocked": sum(1 for r in runs if r.get("status") == "blocked"),
         "errors": sum(1 for r in runs if r.get("status") == "error"),
     }
+
+# --- Reader v2 internal tools (read-only) ---
+def _safe_frontier(cap_id: int, admin_mode: bool) -> int:
+    return int(cap_id) if not admin_mode else 10**9
+
+
+def tool_book_index(cap_id: int, admin_mode: bool) -> dict:
+    conn = sqlite3.connect(get_db_path())
+    conn.row_factory = sqlite3.Row
+    try:
+        frontier = _safe_frontier(cap_id, admin_mode)
+        rows = conn.execute("SELECT id, titolo, pov FROM capitoli WHERE id <= ? ORDER BY id", (frontier,)).fetchall()
+        return {"ok": True, "items": [dict(r) for r in rows], "frontier": frontier}
+    finally:
+        conn.close()
+
+
+def tool_chapter_text(cap_id: int, admin_mode: bool, include_previous: bool = False) -> dict:
+    def _read(cid: int):
+        path = get_chapter_path(cid)
+        if not os.path.exists(path):
+            return ""
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    out = {"ok": True, "cap_id": cap_id, "current": _read(cap_id)}
+    if include_previous and cap_id > 1:
+        out["previous"] = _read(cap_id - 1)
+    return out
+
+
+def tool_chapter_summary(cap_id: int, admin_mode: bool, window: int = 5) -> dict:
+    conn = sqlite3.connect(get_db_path())
+    conn.row_factory = sqlite3.Row
+    try:
+        frontier = _safe_frontier(cap_id, admin_mode)
+        start = max(1, cap_id - max(1, int(window)) + 1)
+        rows = conn.execute(
+            "SELECT id, titolo, riassunto FROM capitoli WHERE id BETWEEN ? AND ? AND id <= ? ORDER BY id",
+            (start, cap_id, frontier),
+        ).fetchall()
+        return {"ok": True, "items": [dict(r) for r in rows], "window": window}
+    finally:
+        conn.close()
+
+
+def tool_timeline_lookup(cap_id: int, admin_mode: bool) -> dict:
+    conn = sqlite3.connect(get_db_path())
+    conn.row_factory = sqlite3.Row
+    try:
+        if admin_mode:
+            rows = conn.execute("SELECT * FROM timeline ORDER BY id").fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT t.* FROM timeline t
+                JOIN capitoli c ON c.timeline_event_id = t.id
+                WHERE c.id <= ? ORDER BY c.id
+                """,
+                (cap_id,),
+            ).fetchall()
+        return {"ok": True, "items": [dict(r) for r in rows]}
+    finally:
+        conn.close()
+
+
+def tool_character_state(cap_id: int, admin_mode: bool) -> dict:
+    conn = sqlite3.connect(get_db_path())
+    conn.row_factory = sqlite3.Row
+    try:
+        frontier = _safe_frontier(cap_id, admin_mode)
+        rows = conn.execute(
+            """
+            SELECT p.nome, pc.capitolo_id, pc.presente, pc.luogo, pc.stato_emotivo, pc.obiettivo, pc.azione_parallela
+            FROM personaggi_capitoli pc
+            JOIN personaggi p ON p.id = pc.personaggio_id
+            WHERE pc.capitolo_id <= ?
+            ORDER BY pc.capitolo_id, p.nome
+            """,
+            (frontier,),
+        ).fetchall()
+        return {"ok": True, "items": [dict(r) for r in rows]}
+    finally:
+        conn.close()
+
+
+def tool_metadata_lookup(cap_id: int, admin_mode: bool, fields: list[str] | None = None) -> dict:
+    conn = sqlite3.connect(get_db_path())
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT * FROM capitoli WHERE id=?", (cap_id,)).fetchone()
+        if not row:
+            return {"ok": False, "error": "capitolo non trovato"}
+        data = dict(row)
+        if admin_mode:
+            keep = {k: data.get(k) for k in fields if k in data} if fields else data
+        else:
+            reader_whitelist = {
+                "id", "titolo", "pov", "luogo", "data_narrativa", "descrizione",
+                "riassunto", "timeline_capitolo", "personaggi_capitolo",
+                "luogo_macro", "linea_narrativa", "stato", "anno",
+            }
+            allow = reader_whitelist.intersection(set(fields)) if fields else reader_whitelist
+            keep = {k: data.get(k) for k in allow if k in data}
+        return {"ok": True, "metadata": keep}
+    finally:
+        conn.close()
+
+
+def tool_canon_constraints(cap_id: int, admin_mode: bool) -> dict:
+    return {
+        "ok": True,
+        "constraints": [
+            f"Reader frontier: capitolo <= {cap_id}" if not admin_mode else "Admin full canon",
+            "No scrittura file/db in reader mode",
+            "No spoiler espliciti su eventi futuri",
+        ],
+    }
+
+
+def tool_spoiler_predictive_guard(candidate_text: str, cap_id: int) -> dict:
+    text = (candidate_text or "").lower()
+    issues = []
+    hints = []
+    spoiler_markers = ["nel prossimo capitolo", "più avanti", "in futuro", "capitolo 6", "capitolo 7", "capitolo 8"]
+    for marker in spoiler_markers:
+        if marker in text:
+            issues.append({"type": "future_reference", "explanation": "Riferimento esplicito al futuro narrativo."})
+    if issues:
+        hints.append("Riformulare restando sul noto fino al capitolo corrente.")
+        return {"ok": True, "severity": "hard", "issues": issues, "rewrite_hints": hints}
+    if "forse" in text and "succeder" in text:
+        return {"ok": True, "severity": "soft", "issues": [{"type": "predictive_tone", "explanation": "Tono predittivo da ammorbidire."}], "rewrite_hints": ["Usa formulazioni centrate sul presente narrativo."]}
+    return {"ok": True, "severity": "none", "issues": [], "rewrite_hints": []}
+
+
+def tool_future_consistency_check(candidate_text: str, cap_id: int) -> dict:
+    """Alias retrocompatibile: in questa fase è un guard lessicale anti-spoiler/predizione."""
+    return tool_spoiler_predictive_guard(candidate_text, cap_id)

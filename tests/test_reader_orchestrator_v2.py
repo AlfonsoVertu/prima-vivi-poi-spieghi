@@ -63,3 +63,35 @@ def test_reader_stream_emits_single_final_synthesis_and_enforces_allowed_tools(m
 
     orchestrator_msgs = [p["content"] for p in payloads if p.get("stage") == "orchestrator"]
     assert any("tool bloccati da policy" in msg for msg in orchestrator_msgs)
+
+
+def test_reader_orchestrator_fallbacks_on_missing_agent_cfg(monkeypatch):
+    def fake_generate_with_agent(agent_cfg, **kwargs):
+        prompt = kwargs.get("prompt", "")
+        if "Classifica la richiesta lettore" in prompt:
+            return "{\"intent\":\"qa\"}"
+        if "Genera SOLO JSON con chiavi depth" in prompt:
+            return "{\"tool_plan\": [\"tool_metadata_lookup\"]}"
+        if "Valuta la bozza" in prompt:
+            return "{\"status\":\"SAFE\"}"
+        return "FINAL"
+
+    fake_llm = types.SimpleNamespace(generate_with_agent=fake_generate_with_agent)
+    monkeypatch.setitem(sys.modules, "llm_client", fake_llm)
+
+    events = list(
+        run_reader_orchestrator_stream(
+            5,
+            "domanda",
+            [],
+            {"reader": {"reader_archivist": {"allowed_tools": ["tool_metadata_lookup"]}}},
+            get_all=lambda: [],
+            get_cap=lambda _id: {},
+            get_full_canon=lambda: "",
+            get_conn=lambda: None,
+            read_txt=lambda _id: "",
+            get_character_context=lambda _id: "",
+        )
+    )
+    synth = [json.loads(e[6:].strip())["content"] for e in events if e.startswith("data: {") and json.loads(e[6:].strip()).get("stage") == "synthesis"]
+    assert synth[-1] == "FINAL"

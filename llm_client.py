@@ -19,7 +19,7 @@ def with_retry(retries=3, delay=2):
     return decorator
 
 @with_retry(retries=3, delay=5)
-def call_openai(prompt=None, api_key=None, model="gpt-4o", max_tokens=4000, system=None, messages=None):
+def call_openai(prompt=None, api_key=None, model="gpt-4o", max_tokens=4000, system=None, messages=None, temperature=0.7):
     url = "https://api.openai.com/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
@@ -38,7 +38,7 @@ def call_openai(prompt=None, api_key=None, model="gpt-4o", max_tokens=4000, syst
     payload = {
         "model": model,
         "messages": final_messages,
-        "temperature": 0.7
+        "temperature": temperature if temperature is not None else 0.7
     }
     if not model.startswith("o"): 
         payload["max_tokens"] = max_tokens
@@ -51,7 +51,7 @@ def call_openai(prompt=None, api_key=None, model="gpt-4o", max_tokens=4000, syst
     data = response.json()
     return data['choices'][0]['message']['content']
 
-def call_anthropic(prompt=None, api_key=None, model="claude-3-7-sonnet-20250219", max_tokens=4000, system=None, messages=None):
+def call_anthropic(prompt=None, api_key=None, model="claude-3-7-sonnet-20250219", max_tokens=4000, system=None, messages=None, temperature=0.7):
     url = "https://api.anthropic.com/v1/messages"
     headers = {
         "x-api-key": api_key,
@@ -73,6 +73,7 @@ def call_anthropic(prompt=None, api_key=None, model="claude-3-7-sonnet-20250219"
     payload = {
         "model": model,
         "max_tokens": max_tokens,
+        "temperature": temperature if temperature is not None else 0.7,
         "system": sys_msg,
         "messages": final_messages
     }
@@ -81,7 +82,7 @@ def call_anthropic(prompt=None, api_key=None, model="claude-3-7-sonnet-20250219"
     data = response.json()
     return data['content'][0]['text']
 
-def call_gemini(prompt=None, api_key=None, model="gemini-2.0-flash", max_tokens=4000, system=None, messages=None):
+def call_gemini(prompt=None, api_key=None, model="gemini-2.0-flash", max_tokens=4000, system=None, messages=None, temperature=0.7):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {
         "Content-Type": "application/json",
@@ -104,7 +105,7 @@ def call_gemini(prompt=None, api_key=None, model="gemini-2.0-flash", max_tokens=
     payload = {
         "system_instruction": {"parts": [{"text": sys_msg}]},
         "contents": final_contents,
-        "generationConfig": {"maxOutputTokens": max_tokens}
+        "generationConfig": {"maxOutputTokens": max_tokens, "temperature": temperature if temperature is not None else 0.7}
     }
     response = requests.post(url, headers=headers, json=payload, timeout=120)
     response.raise_for_status()
@@ -163,7 +164,7 @@ def extract_narrative(text):
 
     return text.strip()
 
-def call_lmstudio(prompt, base_url, model, max_tokens=4000, system=None, api_key=None):
+def call_lmstudio(prompt, base_url, model, max_tokens=4000, system=None, api_key=None, temperature=0.7):
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -171,10 +172,10 @@ def call_lmstudio(prompt, base_url, model, max_tokens=4000, system=None, api_key
         messages.append({"role": "system", "content": "Sei un premiato romanziere italiano specializzato in stili narrativi crudi e diretti in prima persona."})
     
     messages.append({"role": "user", "content": prompt})
-    return call_lmstudio_chat(messages, base_url, model, max_tokens, api_key)
+    return call_lmstudio_chat(messages, base_url, model, max_tokens, api_key, temperature=temperature)
 
 @with_retry(retries=3, delay=5)
-def call_lmstudio_chat(messages, base_url, model, max_tokens=4000, api_key=None):
+def call_lmstudio_chat(messages, base_url, model, max_tokens=4000, api_key=None, temperature=0.7):
     url = f"{base_url}/v1/chat/completions"
     headers = {
         "Content-Type": "application/json"
@@ -186,7 +187,7 @@ def call_lmstudio_chat(messages, base_url, model, max_tokens=4000, api_key=None)
         "model": model,
         "messages": messages,
         "max_tokens": max_tokens,
-        "temperature": 0.7
+        "temperature": temperature if temperature is not None else 0.7
     }
     print(f"DEBUG: Invio richiesta chat a {url} (Modello: {model}, Messaggi: {len(messages)})")
     response = requests.post(url, headers=headers, json=payload, timeout=300)
@@ -196,7 +197,7 @@ def call_lmstudio_chat(messages, base_url, model, max_tokens=4000, api_key=None)
 
 
 
-def call_openai_compatible_chat(messages, base_url, model, max_tokens=4000, api_key=None):
+def call_openai_compatible_chat(messages, base_url, model, max_tokens=4000, api_key=None, temperature=0.7):
     url = f"{base_url.rstrip('/')}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -205,7 +206,7 @@ def call_openai_compatible_chat(messages, base_url, model, max_tokens=4000, api_
         "model": model,
         "messages": messages,
         "max_tokens": max_tokens,
-        "temperature": 0.7,
+        "temperature": temperature if temperature is not None else 0.7,
     }
     response = requests.post(url, headers=headers, json=payload, timeout=180)
     response.raise_for_status()
@@ -213,7 +214,7 @@ def call_openai_compatible_chat(messages, base_url, model, max_tokens=4000, api_
     return data['choices'][0]['message']['content']
 
 
-def call_ollama_chat(messages, base_url, model, max_tokens=4000):
+def call_ollama_chat(messages, base_url, model, max_tokens=4000, temperature=0.7):
     url = f"{base_url.rstrip('/')}/api/chat"
     payload = {
         "model": model,
@@ -221,7 +222,7 @@ def call_ollama_chat(messages, base_url, model, max_tokens=4000):
         "stream": False,
         "options": {
             "num_predict": max_tokens,
-            "temperature": 0.7,
+            "temperature": temperature if temperature is not None else 0.7,
         },
     }
     response = requests.post(url, json=payload, timeout=300)
@@ -276,7 +277,7 @@ def generate_content(prompt, model_name, max_tokens=2000, system=None):
     
     return generate_chapter_text(prompt, provider, model_name, api_key, system=system, max_tokens=max_tokens)
 
-def generate_chapter_text(prompt, provider, model, api_key, system=None, max_tokens=4000, messages=None):
+def generate_chapter_text(prompt, provider, model, api_key, system=None, max_tokens=4000, messages=None, temperature=None):
     """
     Invia la chiamata API al modello selezionato.
     Supporta flussi multi-messaggio per tutti i provider.
@@ -285,26 +286,26 @@ def generate_chapter_text(prompt, provider, model, api_key, system=None, max_tok
         if provider == "openai":
             if not api_key: raise ValueError("API Key OpenAI mancante.")
             try:
-                return call_openai(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=messages)
+                return call_openai(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=messages, temperature=temperature)
             except Exception as e:
                 if "context_length_exceeded" in str(e).lower() and messages:
                     # Fallback Incrementale: Riduciamo il contesto dei riassunti (Step 2)
                     print("ATTENZIONE: Context Window superata. Applico potatura incrementale...")
                     slim_messages = [m for m in messages if "Step 2" not in str(m.get('content', ''))]
-                    return call_openai(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=slim_messages)
+                    return call_openai(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=slim_messages, temperature=temperature)
                 raise e
         elif provider == "anthropic":
             if not api_key: raise ValueError("API Key Anthropic mancante.")
-            return call_anthropic(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=messages)
+            return call_anthropic(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=messages, temperature=temperature)
         elif provider == "google":
             if not api_key: raise ValueError("API Key Google mancante.")
-            return call_gemini(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=messages)
+            return call_gemini(prompt, api_key, model, system=system, max_tokens=max_tokens, messages=messages, temperature=temperature)
         elif provider == "lmstudio":
             base_url = os.getenv("LMSTUDIO_URL", "http://192.168.1.62:1234")
             if messages:
-                return call_lmstudio_chat(messages, base_url, model, max_tokens=max_tokens, api_key=api_key)
+                return call_lmstudio_chat(messages, base_url, model, max_tokens=max_tokens, api_key=api_key, temperature=temperature)
             else:
-                return call_lmstudio(prompt, base_url, model, system=system, max_tokens=max_tokens, api_key=api_key)
+                return call_lmstudio(prompt, base_url, model, system=system, max_tokens=max_tokens, api_key=api_key, temperature=temperature)
         elif provider == "openai_compatible":
             base_url = os.getenv("OPENAI_COMPATIBLE_URL", "").strip()
             if not base_url:
@@ -313,14 +314,14 @@ def generate_chapter_text(prompt, provider, model, api_key, system=None, max_tok
                 {"role": "system", "content": system or "Sei un assistente narrativo."},
                 {"role": "user", "content": prompt},
             ]
-            return call_openai_compatible_chat(final_messages, base_url, model, max_tokens=max_tokens, api_key=api_key)
+            return call_openai_compatible_chat(final_messages, base_url, model, max_tokens=max_tokens, api_key=api_key, temperature=temperature)
         elif provider == "ollama":
             base_url = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
             final_messages = messages if messages else [
                 {"role": "system", "content": system or "Sei un assistente narrativo."},
                 {"role": "user", "content": prompt},
             ]
-            return call_ollama_chat(final_messages, base_url, model, max_tokens=max_tokens)
+            return call_ollama_chat(final_messages, base_url, model, max_tokens=max_tokens, temperature=temperature)
         else:
             raise ValueError(f"Provider {provider} non supportato.")
     except requests.exceptions.HTTPError as e:
@@ -341,7 +342,15 @@ def generate_with_agent(
     cfg = agent_cfg or {}
     provider = cfg.get("provider", "openai")
     model = cfg.get("model", "gpt-4o")
-    max_tokens = int(cfg.get("max_tokens", 1200) or 1200)
+    try:
+        max_tokens = int(cfg.get("max_tokens", 1200) or 1200)
+    except Exception:
+        max_tokens = 1200
+    try:
+        temperature = float(cfg.get("temperature", 0.7))
+    except Exception:
+        temperature = 0.7
+    temperature = max(0.0, min(temperature, 2.0))
     sys_prompt = system if system is not None else cfg.get("system_prompt")
 
     api_key = ""
@@ -372,4 +381,5 @@ def generate_with_agent(
         system=sys_prompt,
         max_tokens=max_tokens,
         messages=messages,
+        temperature=temperature,
     )

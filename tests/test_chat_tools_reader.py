@@ -1,4 +1,7 @@
-from chat_tools import tool_chapter_summary, tool_timeline_lookup, tool_chapter_text, tool_metadata_lookup
+from chat_tools import (
+    tool_chapter_summary, tool_timeline_lookup, tool_chapter_text, tool_metadata_lookup,
+    get_db_path, get_chapters_dir, get_chapter_path,
+)
 
 
 def test_reader_summary_no_future():
@@ -29,3 +32,9 @@ def test_reader_metadata_whitelist_no_spoiler_fields():
     assert "personaggi_successivi" not in md
     assert "transizione_prossimo_capitolo" not in md
     assert "hook_finale" not in md
+
+
+def test_path_helpers_are_consistent():
+    assert get_db_path().endswith("roman.db")
+    assert get_chapters_dir().endswith("capitoli")
+    assert get_chapter_path(5).endswith("cap05.txt")

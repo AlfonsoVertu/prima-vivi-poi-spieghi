@@ -4,6 +4,21 @@ import sqlite3
 from typing import Any, Dict, List
 from vector_index_local import ensure_schema as ensure_vector_schema, search_index as vector_search_index, index_stats as vector_index_stats
 
+DEFAULT_DB_PATH = os.getenv("ROMAN_DB_PATH", "roman.db")
+DEFAULT_CHAPTERS_DIR = os.getenv("CAPITOLI_DIR", "capitoli")
+
+
+def get_db_path() -> str:
+    return DEFAULT_DB_PATH
+
+
+def get_chapters_dir() -> str:
+    return DEFAULT_CHAPTERS_DIR
+
+
+def get_chapter_path(cap_id: int) -> str:
+    return os.path.join(get_chapters_dir(), f"cap{int(cap_id):02d}.txt")
+
 ALLOWED_UPDATE_FIELDS = {
     "titolo", "pov", "luogo", "data_narrativa", "descrizione", "personaggi_precedenti", "personaggi_successivi",
     "background", "parallelo", "obiettivi_personaggi", "timeline_capitolo", "timeline_opera", "riassunto",
@@ -409,7 +424,7 @@ def _safe_frontier(cap_id: int, admin_mode: bool) -> int:
 
 
 def tool_book_index(cap_id: int, admin_mode: bool) -> dict:
-    conn = sqlite3.connect("roman.db")
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     try:
         frontier = _safe_frontier(cap_id, admin_mode)
@@ -421,7 +436,7 @@ def tool_book_index(cap_id: int, admin_mode: bool) -> dict:
 
 def tool_chapter_text(cap_id: int, admin_mode: bool, include_previous: bool = False) -> dict:
     def _read(cid: int):
-        path = os.path.join("capitoli", f"cap{cid:02d}.txt")
+        path = get_chapter_path(cid)
         if not os.path.exists(path):
             return ""
         with open(path, "r", encoding="utf-8") as f:
@@ -433,7 +448,7 @@ def tool_chapter_text(cap_id: int, admin_mode: bool, include_previous: bool = Fa
 
 
 def tool_chapter_summary(cap_id: int, admin_mode: bool, window: int = 5) -> dict:
-    conn = sqlite3.connect("roman.db")
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     try:
         frontier = _safe_frontier(cap_id, admin_mode)
@@ -448,7 +463,7 @@ def tool_chapter_summary(cap_id: int, admin_mode: bool, window: int = 5) -> dict
 
 
 def tool_timeline_lookup(cap_id: int, admin_mode: bool) -> dict:
-    conn = sqlite3.connect("roman.db")
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     try:
         if admin_mode:
@@ -468,7 +483,7 @@ def tool_timeline_lookup(cap_id: int, admin_mode: bool) -> dict:
 
 
 def tool_character_state(cap_id: int, admin_mode: bool) -> dict:
-    conn = sqlite3.connect("roman.db")
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     try:
         frontier = _safe_frontier(cap_id, admin_mode)
@@ -488,7 +503,7 @@ def tool_character_state(cap_id: int, admin_mode: bool) -> dict:
 
 
 def tool_metadata_lookup(cap_id: int, admin_mode: bool, fields: list[str] | None = None) -> dict:
-    conn = sqlite3.connect("roman.db")
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     try:
         row = conn.execute("SELECT * FROM capitoli WHERE id=?", (cap_id,)).fetchone()

@@ -39,3 +39,4 @@ Ultimo aggiornamento: 2026-03-24
 
 - 2026-04-01: avviata implementazione reader-orchestrator v2 con agent config JSON, tool layer read-only e integrazione endpoint /api/chat (reader path).
 - 2026-04-01: fix bloccanti PR reader v2: una sola synthesis finale, enforcement allowed_tools archivist, metadata whitelist reader-safe, validator rinominato come guard lessicale anti-spoiler/predittivo.
+- 2026-04-01: hardening finale PR #3: temperature propagata nel runtime agentico, helper path reader centralizzati, fallback config agente robusti e test aggiuntivi di coerenza runtime/config.

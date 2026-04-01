@@ -1,5 +1,6 @@
 import json
 import re
+from agent_config import get_agent_config
 from chat_tools import (
     tool_book_index,
     tool_chapter_text,
@@ -76,9 +77,14 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
 
         yield _sse("context", "🧭 Reader v2: avvio orchestrazione")
         reader_cfg = (agent_configs or {}).get("reader", {})
+        def agent_cfg(name: str) -> dict:
+            cfg = reader_cfg.get(name, {}) if isinstance(reader_cfg, dict) else {}
+            if isinstance(cfg, dict) and cfg:
+                return cfg
+            return get_agent_config("reader", name)
 
         # 1) Intent router (agente reale)
-        router_cfg = reader_cfg.get("reader_intent_router", {})
+        router_cfg = agent_cfg("reader_intent_router")
         router_prompt = (
             "Classifica la richiesta lettore. Restituisci SOLO JSON con chiavi: "
             "intent(qa|recap|retell|alternate_pov|explain), depth(shallow|medium|deep), "
@@ -96,7 +102,7 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
         yield _sse("orchestrator", f"router: {json.dumps(router_out, ensure_ascii=False)}")
 
         # 2) Scope planner (agente reale)
-        planner_cfg = reader_cfg.get("reader_scope_planner", {})
+        planner_cfg = agent_cfg("reader_scope_planner")
         planner_prompt = (
             "Genera SOLO JSON con chiavi depth, tool_plan(array di tool reader-safe), reasoning_notes. "
             "Tool disponibili: tool_book_index, tool_chapter_text, tool_chapter_summary, tool_timeline_lookup, "
@@ -117,8 +123,9 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
         yield _sse("orchestrator", f"scope_planner: {json.dumps(planner_out, ensure_ascii=False)}")
 
         # 3) Archivist (tool-driven + enforcement allowed_tools)
-        archivist_cfg = reader_cfg.get("reader_archivist", {})
-        allowed = set(archivist_cfg.get("allowed_tools", []))
+        archivist_cfg = agent_cfg("reader_archivist")
+        allowed_raw = archivist_cfg.get("allowed_tools", [])
+        allowed = set(allowed_raw) if isinstance(allowed_raw, list) else set()
         dossier = {}
         blocked = []
         for tool_name in planner_out["tool_plan"]:
@@ -131,7 +138,7 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
         yield _sse("context", "📚 dossier reader costruito")
 
         # 4) Transformer (agente reale)
-        transformer_cfg = reader_cfg.get("reader_transformer", {})
+        transformer_cfg = agent_cfg("reader_transformer")
         transform_prompt = (
             f"Intent: {router_out.get('intent')}\nDomanda: {user_msg}\n"
             f"POV richiesto: {router_out.get('requested_pov')}\n"
@@ -141,7 +148,7 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
         draft = generate_with_agent(transformer_cfg, prompt=transform_prompt)
 
         # 5) Validator (agente reale + guard lessicale trasparente)
-        validator_cfg = reader_cfg.get("future_coherence_validator", {})
+        validator_cfg = agent_cfg("future_coherence_validator")
         lexical_guard = tool_spoiler_predictive_guard(draft, cap_id)
         validator_prompt = (
             "Valuta la bozza e restituisci SOLO JSON con status(SAFE|REWRITE), reason, rewrite_hints(array). "
@@ -159,7 +166,7 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
         yield _sse("orchestrator", f"validator: status={status}")
 
         # 6) Spoiler guard (agente reale)
-        guard_cfg = reader_cfg.get("reader_spoiler_guard", {})
+        guard_cfg = agent_cfg("reader_spoiler_guard")
         guarded_text = draft
         if status == "REWRITE":
             guard_prompt = (
@@ -170,7 +177,7 @@ def run_reader_orchestrator_stream(cap_id: int, user_msg: str, history: list[dic
             guarded_text = generate_with_agent(guard_cfg, prompt=guard_prompt)
 
         # 7) Final voice (agente reale) - UNICA synthesis visibile
-        final_cfg = reader_cfg.get("reader_final_voice", {})
+        final_cfg = agent_cfg("reader_final_voice")
         final_prompt = (
             "Rifinisci in tono 'Voce dell'Archivio', read-only, senza leak futuri.\n"
             f"Intent: {router_out.get('intent')}\n"

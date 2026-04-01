@@ -18,6 +18,32 @@ DEFAULT_AGENT_CONFIGS = {
     },
     "admin": {},
 }
+SUPPORTED_PROVIDERS = {"openai", "anthropic", "google", "lmstudio", "openai_compatible", "ollama"}
+
+
+def _normalize_agent_config(scope: str, name: str, cfg: dict) -> dict:
+    base = deepcopy(DEFAULT_AGENT_CONFIGS.get(scope, {}).get(name, {}))
+    incoming = cfg if isinstance(cfg, dict) else {}
+    merged = {**base, **incoming}
+    merged["enabled"] = bool(merged.get("enabled", True))
+    provider = str(merged.get("provider", base.get("provider", "openai")) or "").strip().lower()
+    if provider not in SUPPORTED_PROVIDERS:
+        provider = base.get("provider", "openai")
+    merged["provider"] = provider
+    model = str(merged.get("model", base.get("model", "")) or "").strip()
+    merged["model"] = model or base.get("model", "gpt-5-mini")
+    merged["system_prompt"] = str(merged.get("system_prompt", base.get("system_prompt", "")) or "")
+    tools = merged.get("allowed_tools", base.get("allowed_tools", []))
+    merged["allowed_tools"] = [str(t).strip() for t in tools] if isinstance(tools, list) else list(base.get("allowed_tools", []))
+    try:
+        merged["temperature"] = max(0.0, min(float(merged.get("temperature", base.get("temperature", 0.7))), 2.0))
+    except Exception:
+        merged["temperature"] = float(base.get("temperature", 0.7))
+    try:
+        merged["max_tokens"] = max(64, int(merged.get("max_tokens", base.get("max_tokens", 1200))))
+    except Exception:
+        merged["max_tokens"] = int(base.get("max_tokens", 1200))
+    return merged
 
 
 def validate_agent_configs(data: dict) -> list[str]:
@@ -44,19 +70,28 @@ def validate_agent_configs(data: dict) -> list[str]:
 
 
 def load_agent_configs() -> dict:
+    result = deepcopy(DEFAULT_AGENT_CONFIGS)
     if not os.path.exists(AGENT_CONFIG_FILE):
-        return deepcopy(DEFAULT_AGENT_CONFIGS)
+        return result
     try:
         with open(AGENT_CONFIG_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-        errors = validate_agent_configs(data)
-        if errors:
-            logger.warning("agent_configs.json non valido, fallback defaults: %s", "; ".join(errors))
-            return deepcopy(DEFAULT_AGENT_CONFIGS)
-        return data
+        if not isinstance(data, dict):
+            logger.warning("agent_configs.json root non valido, fallback defaults")
+            return result
+        for scope in ["reader", "admin"]:
+            scoped = data.get(scope, {})
+            if not isinstance(scoped, dict):
+                continue
+            for name, cfg in scoped.items():
+                if scope == "reader":
+                    result[scope][name] = _normalize_agent_config(scope, name, cfg)
+                elif isinstance(cfg, dict):
+                    result[scope][name] = cfg
+        return result
     except Exception as e:
         logger.warning("Errore load agent configs (%s), fallback defaults", e)
-        return deepcopy(DEFAULT_AGENT_CONFIGS)
+        return result
 
 
 def save_agent_configs(data: dict) -> None:
@@ -71,5 +106,7 @@ def get_agent_config(scope: str, agent_name: str) -> dict:
     data = load_agent_configs()
     scoped = data.get(scope, {}) if isinstance(data, dict) else {}
     if agent_name in scoped:
+        if scope == "reader":
+            return _normalize_agent_config(scope, agent_name, scoped[agent_name])
         return deepcopy(scoped[agent_name])
-    return deepcopy(DEFAULT_AGENT_CONFIGS.get(scope, {}).get(agent_name, {}))
+    return _normalize_agent_config(scope, agent_name, {})

@@ -329,3 +329,47 @@ def generate_chapter_text(prompt, provider, model, api_key, system=None, max_tok
         raise Exception(f"Errore HTTP API {status}: {err_text}")
     except Exception as e:
         raise Exception(f"Errore generazione LLM: {str(e)}")
+
+
+def generate_with_agent(
+    agent_cfg: dict,
+    *,
+    prompt: str | None = None,
+    system: str | None = None,
+    messages: list[dict] | None = None
+) -> str:
+    cfg = agent_cfg or {}
+    provider = cfg.get("provider", "openai")
+    model = cfg.get("model", "gpt-4o")
+    max_tokens = int(cfg.get("max_tokens", 1200) or 1200)
+    sys_prompt = system if system is not None else cfg.get("system_prompt")
+
+    api_key = ""
+    if provider == "openai":
+        api_key = os.getenv("OPENAI_API_KEY", "")
+    elif provider == "anthropic":
+        api_key = os.getenv("CLAUDE_API_KEY", "")
+    elif provider == "google":
+        api_key = os.getenv("GEMINI_API_KEY", "")
+    elif provider == "lmstudio":
+        api_key = os.getenv("LMSTUDIO_API_KEY", "")
+    elif provider == "openai_compatible":
+        api_key = os.getenv("OPENAI_COMPATIBLE_API_KEY", "")
+    elif provider == "ollama":
+        api_key = ""
+
+    if messages is None:
+        messages = [
+            {"role": "system", "content": sys_prompt or "Sei un assistente."},
+            {"role": "user", "content": prompt or ""},
+        ]
+
+    return generate_chapter_text(
+        prompt or "",
+        provider,
+        model,
+        api_key,
+        system=sys_prompt,
+        max_tokens=max_tokens,
+        messages=messages,
+    )

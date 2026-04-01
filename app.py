@@ -18,6 +18,7 @@ from spoiler_guard import enforce_reader_safety
 from chat_tools import execute_tool as chat_execute_tool, available_tools as chat_available_tools, available_tools_catalog as chat_available_tools_catalog, execute_tool_plan as chat_execute_tool_plan, normalize_tool_plan as chat_normalize_tool_plan
 from vector_index_local import ensure_schema as ensure_vector_schema, rebuild_index as vector_rebuild_index, index_stats as vector_index_stats, search_index as vector_search_index, list_index_versions as vector_list_index_versions, refresh_index_for_chapters as vector_refresh_index_for_chapters
 from compila_iterativo import build_prompt
+from agent_config import load_agent_configs, save_agent_configs
 import requests, base64
 from datetime import datetime
 
@@ -940,6 +941,28 @@ def log_spoiler_audit_event(session_key, cap_id, audit, rewritten):
         conn.commit()
     finally:
         conn.close()
+
+
+def _render_agent_studio_form(reader_agents):
+    blocks = []
+    for name, cfg in (reader_agents or {}).items():
+        tools = ", ".join(cfg.get("allowed_tools", []))
+        block = f"""
+        <div style="border:1px solid #2a2f3a;border-radius:8px;padding:12px;margin-bottom:12px;background:#0f1115">
+          <h3 style="margin:0 0 10px 0">{name}</h3>
+          <label><input type="checkbox" name="agent_{name}_enabled" {'checked' if cfg.get('enabled') else ''}> enabled</label>
+          <div class="field"><label>Provider</label><input type="text" name="agent_{name}_provider" value="{cfg.get('provider','')}"></div>
+          <div class="field"><label>Model</label><input type="text" name="agent_{name}_model" value="{cfg.get('model','')}"></div>
+          <div class="field"><label>System prompt</label><textarea name="agent_{name}_system_prompt" style="height:90px">{cfg.get('system_prompt','')}</textarea></div>
+          <div class="field"><label>Allowed tools (comma-separated)</label><input type="text" name="agent_{name}_allowed_tools" value="{tools}"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Temperature</label><input type="number" step="0.1" name="agent_{name}_temperature" value="{cfg.get('temperature',0.2)}"></div>
+            <div class="field"><label>Max tokens</label><input type="number" step="1" name="agent_{name}_max_tokens" value="{cfg.get('max_tokens',1200)}"></div>
+          </div>
+        </div>
+        """
+        blocks.append(block)
+    return "".join(blocks)
 
 def get_all():
     conn = get_conn()
@@ -3000,6 +3023,7 @@ def api_chat(cap_id):
     if persisted_memory.get("open_questions"):
         user_msg += "\n\n[MEMORIA_SESSIONE] Domande aperte: " + " | ".join(persisted_memory["open_questions"][:3])
 
+    requested_mode = (data.get("mode") or "auto").strip().lower()
     should_stream = data.get("stream", True) # Default to stream now
     include_sources = bool(data.get("include_sources", admin_mode))
     
@@ -3214,7 +3238,31 @@ def api_chat(cap_id):
     if not should_stream:
         try:
             debug = {}
-            if multirole_ready:
+            if not admin_mode:
+                from reader_orchestrator_v2 import run_reader_orchestrator_stream
+                agent_cfgs = load_agent_configs()
+                chunks = []
+                for chunk_sse in run_reader_orchestrator_stream(
+                    cap_id,
+                    user_msg,
+                    history,
+                    agent_cfgs,
+                    get_all=get_all,
+                    get_cap=get_cap,
+                    get_full_canon=get_full_canon,
+                    get_conn=get_conn,
+                    read_txt=read_txt,
+                    get_character_context=get_character_context,
+                    mode_hint=requested_mode,
+                ):
+                    payload = parse_sse_payload(chunk_sse)
+                    if payload and payload.get("stage") == "synthesis":
+                        chunks.append(payload.get("content", ""))
+                reply = "".join(chunks).strip()
+                spoiler_audit = {"status": "skipped", "violations": []}
+                rewritten = False
+                debug = {"reader_v2": True}
+            elif multirole_ready:
                 result = run_multirole_phase1()
                 reply = result["reply"]
                 spoiler_audit = result["spoiler_audit"]
@@ -3256,6 +3304,7 @@ def api_chat(cap_id):
     def generate():
         import re
         from ai_orchestrator import run_orchestrator_stream
+        from reader_orchestrator_v2 import run_reader_orchestrator_stream
         synthesis_chunks = []
         
         try:
@@ -3273,10 +3322,26 @@ def api_chat(cap_id):
                 yield "data: [DONE]\n\n"
                 return
 
-            generator = run_orchestrator_stream(
-                cap_id, provider, model_name, api_key, user_msg, admin_mode, prompts,
-                get_all, get_full_canon, get_conn, read_txt, get_character_context
-            )
+            if not admin_mode:
+                agent_cfgs = load_agent_configs()
+                generator = run_reader_orchestrator_stream(
+                    cap_id,
+                    user_msg,
+                    history,
+                    agent_cfgs,
+                    get_all=get_all,
+                    get_cap=get_cap,
+                    get_full_canon=get_full_canon,
+                    get_conn=get_conn,
+                    read_txt=read_txt,
+                    get_character_context=get_character_context,
+                    mode_hint=requested_mode,
+                )
+            else:
+                generator = run_orchestrator_stream(
+                    cap_id, provider, model_name, api_key, user_msg, admin_mode, prompts,
+                    get_all, get_full_canon, get_conn, read_txt, get_character_context
+                )
             for chunk_sse in generator:
                 payload = parse_sse_payload(chunk_sse)
                 if payload and payload.get("stage") == "synthesis":
@@ -3945,6 +4010,30 @@ def settings():
                 new_donations.append({"label": labels[i], "url": urls[i], "desc": descs[i]})
         ui["donation_links"] = new_donations
         save_ui_settings(ui)
+
+        # Agent Studio (reader scope)
+        agent_cfgs = load_agent_configs()
+        reader_cfg = agent_cfgs.get("reader", {})
+        for agent_name, cfg in list(reader_cfg.items()):
+            pfx = f"agent_{agent_name}_"
+            if f"{pfx}provider" not in request.form:
+                continue
+            cfg["enabled"] = request.form.get(f"{pfx}enabled") == "on"
+            cfg["provider"] = request.form.get(f"{pfx}provider", cfg.get("provider", "openai"))
+            cfg["model"] = request.form.get(f"{pfx}model", cfg.get("model", ""))
+            cfg["system_prompt"] = request.form.get(f"{pfx}system_prompt", cfg.get("system_prompt", ""))
+            cfg["allowed_tools"] = [x.strip() for x in request.form.get(f"{pfx}allowed_tools", "").split(",") if x.strip()]
+            try:
+                cfg["temperature"] = float(request.form.get(f"{pfx}temperature", cfg.get("temperature", 0.2)))
+            except Exception:
+                pass
+            try:
+                cfg["max_tokens"] = int(request.form.get(f"{pfx}max_tokens", cfg.get("max_tokens", 1200)))
+            except Exception:
+                pass
+            reader_cfg[agent_name] = cfg
+        agent_cfgs["reader"] = reader_cfg
+        save_agent_configs(agent_cfgs)
         
         return redirect(url_for('settings', msg='ok'))
         
@@ -4004,6 +4093,7 @@ def settings():
         <div class="tab" data-group="set" data-id="aiflow">🧠 Flusso Generazione AI</div>
         <div class="tab" data-group="set" data-id="prompt_edit">✍️ Modifica Prompt</div>
         <div class="tab" data-group="set" data-id="ui_ext">🎨 UI & Contatti (Donazioni)</div>
+        <div class="tab" data-group="set" data-id="agent_studio">🧪 Agent Studio</div>
         <div class="tab" data-group="set" data-id="agentic">🤖 Gestione Agenti Chat</div>
       </div>
       
@@ -4130,6 +4220,13 @@ def settings():
                 <button type="button" class="btn" onclick="mcpCleanupAudit()">Cleanup audit</button>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="tab-content" data-tab="set" data-id="agent_studio">
+          <div class="card" style="max-width:1100px">
+            <h2 style="margin-bottom:12px;color:#8ad">Agent Studio (Reader)</h2>
+            <p style="color:var(--muted);font-size:12px">Configura provider/modello/prompt/tool policy per ogni agente reader.</p>
+            {_render_agent_studio_form(load_agent_configs().get('reader', {}))}
           </div>
         </div>
         <!-- TAB GENERALI E CHIAVI -->

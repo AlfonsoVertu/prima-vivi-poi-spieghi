@@ -1,0 +1,29 @@
+**CAPITOLO 40**
+
+**Kyiv, Bunker Server Primario**
+**Febbraio 2022**
+
+Il ronzio è costante. Migliaia di ventole a diecimila giri che spaccano il silenzio, un rumore bianco che non ti dà tregua. Non c’è aria qui sotto, solo un corridoio di rack metallici che emana calore. Il calore dei circuiti. Il sapore è quello del caffè bruciato, rimasugli di una tazza sbiadita che poggia sulla console, mescolata al sapore metallico della polvere e del Modafinil che inizia a circolare nel sangue.
+
+Ho trentadue anni. I miei occhi non sono visti l'apocalisse; vedono solo i pixel. La retina brucia contro il bagliore dei monitor. Non c’è tralnya, non c’è epica: c’è solo la frequenza di aggiornamento degli schermi che sbatte sul mio nervo ottico.
+
+E fuori? Fuori c'è il rumore del cemento che si incrina. Ma io sono qui, a trenta metri di profondità, incastrato tra i cavi in fibra e le schede madri.
+
+Il monitor centrale non mente. Non è una visione, è un output. I grafici passano da un ronzio algido a un picco di saturazione. Un attacco DDoS sta mangiando la rete. Non sono le bombe a colpire, è il traffico di pacchetti che satura i gateway. Le farm di bot di San Pietro lo stanno facendo, non so che altro scrivervi. Cercano di affogare i router con una massa di dati fittizi, un rumore digitale che tenta di spegnere l'infrastruttura.
+
+Sento le dita. Tremano. Non è l'emozione, è la stanchezza sinaptica. Le dita sbattono sulle tastiere, scartando i layer di protezione. 
+
+Poi, il log si ferma. Un'anomalia.
+
+Non è un errore di calcolo, è una deviazione logica. Mentre il sistema tenta di processare l'invasione, vedo il reindirizzamento. I pacchetti non seguono la rotta standard verso i nodi nazionali; vengono deviati verso un gateway offshore con una firma che puzza di manovra contabile. 
+
+Il mirroring dei dati è sporco. 
+
+Invece di restare nei server di Kyiv, il traffico scivola verso l'esterno. Cento, mille, milioni di euro non si perdono per un errore di calcolo, ma per una sfasatura nel routing: i capitali vengono reindirizzati verso nodi offshore, verso gateway con firma ministeriale, come se il sistema venisse defalcato da un bug di instradamento. I fondi scivolano via dai conti, non per sfortuna, ma perché la logica del protocollo è stata hackerata. Un reindirizzamento verso l'estero che svuota le casse statali in frazioni di millisecondo.
+
+Il mio stomaco si contrae. Non è speranza. È solo il segnale che il backup è a rischio.
+
+Digitando, isolo il dato. Stacco il collegamento dal mirror principale e forzo un dump manuale su un'unità USB, un pezzo di silicio grezzo che tengo tra le dita, gelido e sbarbato. Un backup d'emergenza per proteggere l'integrità del codice prima che la rete collassi definitivamente.
+
+Sento il peso dei bit. Sento il vuoto tra un pacchetto e l'altro. 
+Non c'è nulla da pregare. C'è solo il dato che deve restare intatto.

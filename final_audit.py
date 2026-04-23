@@ -1,7 +1,7 @@
 import os
 import re
 
-folder = r'c:\Users\Raven\react\ha-prima-vivi-poi-spieghi\prima_vivi_poi_spieghi\capitoli'
+folder = r'C:\Users\Raven\react\prima-vivi-poi-spieghi\capitoli'
 corrupted_marker = "La densità narrativa di questo snodo"
 markers_2 = ["infingardo", "asfissiante", "asettico", "marziale"]
 

@@ -1,0 +1,37 @@
+**Capitolo 40**
+**Server room**
+**POV: Andriy**
+**Kyiv, Febbraio 2022**
+
+---
+
+Ci sono guerre che annunciano il rombo dell'artiglieria e il rintocco delle sirene. E ci sono le guerre a cui assisterò io, in un ronzio termico di luce azzurra. Non vidi i carri russi superare il perimetro. Ero a trenta metri sotto l'asfalto gelato, chiuso in una camera di contenimento: la server room del bancomat ucraino.
+
+La stanza era nera. I rack metallici dividevano lo spazio. Il respiro delle ventole fondeva ogni suono in un ronzio costante. Era il battito dell'economia. Milioni di pagamenti e mutui pulsavano nei cavi di fibra ottica, tra il controsoffitto polveroso. 
+
+Io avevo trentadue anni. Avevo quattro dosi di modafinil nel sangue. Gli occhi bruciavano sotto lo schermo. Ero il sacerdote di questa cattedrale di silicio.
+
+«Carico anomalo sul nodo sette-B. Ridireziona i pacchetti,» sussurrai. Le dita scivolavano sulle tastiere, sporche di briciole e caffè. Erano le 04:15 del 24 febbraio. Sopra di me, tre metri di cemento. Putin lanciava la sua operazione. Non lo sentii. Guardai i grafici sulla console: il verde mela passava al rosso scarlatto.
+
+Non erano bombe. Prima della carne e della malta, muore il codice. 
+Un attacco DDoS assaltò i firewall. Le macchine di San Pietroburgo cercavano di affogare i router con spazzatura sintetica. Cercavano di spegnere i bancomat prima che la polizia dislocasse l'esercito.
+
+"Non stasera," ringhiai. "Non finché sono vivo a questa scrivania." 
+Alzai i filtri digitali, chiudendo ogni accesso sospetto. Sudavo. L'aria della stanza era gelida, impostata a diciannove gradi. 
+
+In sedici secondi, tamponai la falla. I server sbadilavano, rigettando i dati corrotti in ammassi di memoria inutile. L'economia restò accesa, salvata per un soffio. Mi accasai sulla sedia di pelle sintetica. Passai le dita sulle falangi, stanche e nodose. 
+
+«Hai incassato il colpo, cattedrale?» mormorai. Massai gli occhi, arrossati dal plasma dei monitor. 
+Era un momento di tregua. Mentre l'esercito ucraino combatteva sui fronti, io vedevo l'ombra. Un colpo viscido, una corruzione interna. Nel log d'amministrazione, m'incagliò un segnale strano. Non era il DDoS russo. Era qualcosa di diverso: una firma d'eccellenza, una truffa statale.
+
+L'operazione scattò. Dapprima svanirono i blocchi anonimi, poi i valori contabili esplosero. Centocinquanta milioni di euro in valuta pesante. Una quantità di capitali pubblici che venivano reindirizzati verso l'estero, verso isole e banche straniere.
+
+Il mio fiato si fermò. 
+Lassù, i palazzi esplodevano. La gente correva nei tunnel gelidi. Ma laggiù, un manipolo di alti ufficiali stava rapinando i forzieri nazionali. Un profitto illecito.
+
+Le mani mi tremarono per la repulsione. Di fronte a quella frode del secolo, scelsi l'azione. Non rimasi a guardare. 
+«Il sistema è complice,» urlai. 
+
+Digitai una stringa di salvataggio. Staccai il collegamento dal server e fusi il backup nel mio disco USB. Il mio minuscolo ciondolo di metallo, in tasca. Sapevo di essere l'uomo ombra, l'unico a vedere la marea che si ritraeva.
+
+Chiusi gli schermi. Conservai il frammento metallico nella calza, tra il sudore e la polvere. La ritorsione era iniziata.

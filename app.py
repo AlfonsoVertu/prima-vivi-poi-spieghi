@@ -99,6 +99,14 @@ def get_env_var(key, default=""):
                     return f.read()
             except:
                 pass
+    elif key == 'PROJECT_CANON_UPDATED':
+        canon_upd_path = os.path.join(os.getcwd(), "CANONE_AGGIORNATO.md")
+        if os.path.exists(canon_upd_path):
+            try:
+                with open(canon_upd_path, "r", encoding="utf-8") as f:
+                    return f.read()
+            except:
+                pass
     return os.getenv(key, default)
 
 DB_PATH = "roman.db"
@@ -131,6 +139,14 @@ def set_env_var(key, value):
             
         # Nel file .env mettiamo solo un segnaposto
         value = "Consulta CANONE_DEFINITIVO.md"
+    elif key == 'PROJECT_CANON_UPDATED':
+        canon_upd_path = os.path.join(os.getcwd(), "CANONE_AGGIORNATO.md")
+        try:
+            with open(canon_upd_path, 'w', encoding="utf-8") as f:
+                f.write(str(value))
+        except Exception as e:
+            logger.error(f"Errore salvataggio CANONE_AGGIORNATO.md: {e}")
+        value = "Consulta CANONE_AGGIORNATO.md"
     else:
         # Rimuove eventuali newline per le altre variabili ENV per evitare corruzione del file .env
         value = str(value).replace("\n", " ").replace("\r", " ").strip()
@@ -1403,8 +1419,8 @@ async function sendAIChatMessage() {
     }
 }
 
-window.fullSubtitle = {{ fullSubtitle | tojson | safe if fullSubtitle is defined else '""' }};
-window.fullTimeline = {{ fullTimeline | tojson | safe if fullTimeline is defined else '""' }};
+window.fullSubtitle = {{ fullSubtitle | tojson | safe if fullSubtitle is defined else '"" | safe' }};
+window.fullTimeline = {{ fullTimeline | tojson | safe if fullTimeline is defined else '"" | safe' }};
 
 function showFullText(type) {
   const overlay = document.getElementById('full-text-overlay');
@@ -3967,7 +3983,7 @@ def settings():
     if request.method == "POST":
         # Campi ENV
         env_keys = [
-            "PROJECT_TITLE", "PROJECT_SUBTITLE", "PROJECT_TIMELINE", "PROJECT_REVISION_GOALS", "LOCAL_DNS",
+            "PROJECT_TITLE", "PROJECT_SUBTITLE", "PROJECT_TIMELINE", "PROJECT_CANON_UPDATED", "PROJECT_REVISION_GOALS", "LOCAL_DNS",
             "API_AUTH_MODE", "API_CUSTOM_HEADER_KEY", "API_TOKEN", "API_USER_CODE",
             "OPENAI_API_KEY", "GEMINI_API_KEY", "CLAUDE_API_KEY", "LMSTUDIO_URL", "LMSTUDIO_API_KEY", "LLM_PROVIDER",
             "ADMIN_CHAT_MODEL", "AI_MAX_CONTEXT_TOKENS"
@@ -4245,8 +4261,13 @@ def settings():
             </div>
             
             <div class="field">
-              <label>Timeline dell'Opera (Riassunto Grande)</label>
-              <textarea name="PROJECT_TIMELINE" class="tall" placeholder="Inserisci qui il riassunto esteso globale dell'opera...">{get_env_var('PROJECT_TIMELINE')}</textarea>
+              <label>📜 CANONE DEFINITIVO (Timeline e Regole Base)</label>
+              <textarea name="PROJECT_TIMELINE" class="tall" placeholder="Inserisci qui il documento strutturale dell'opera...">{get_env_var('PROJECT_TIMELINE')}</textarea>
+            </div>
+            
+            <div class="field">
+              <label>📜 CANONE AGGIORNATO (Archivio Eventi Correnti)</label>
+              <textarea name="PROJECT_CANON_UPDATED" class="tall" placeholder="Inserisci qui il tracking degli eventi attuali...">{get_env_var('PROJECT_CANON_UPDATED')}</textarea>
             </div>
 
             <div class="field" style="border:1px solid #c9a96e; padding:12px; border-radius:6px; background:rgba(201,169,110,0.05)">
@@ -4333,7 +4354,7 @@ def settings():
               <div class="field" style="margin-top:20px">
                 <label>Utilizza LM Studio come Provider Predefinito?</label>
                 <select name="LLM_PROVIDER">
-                    <option value="none" {'selected' if get_env_var('LLM_PROVIDER') == 'none' else ''}>No, usa provider Cloud (OpenAI/Anthropic/Google)</option>
+                    <option value="none" {'selected' if get_env_var('LLM_PROVIDER') in ['none', '', None] else ''}>No, usa provider Cloud (OpenAI/Anthropic/Google)</option>
                     <option value="lmstudio" {'selected' if get_env_var('LLM_PROVIDER') == 'lmstudio' else ''}>Sì, forza LM Studio (Ignora modelli Cloud)</option>
                 </select>
                 <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Se attivo, il sistema cercherà di usare sempre l'endpoint locale indipendentemente dal modello selezionato sopra.</small>

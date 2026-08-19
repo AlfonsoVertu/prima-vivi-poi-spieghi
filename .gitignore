@@ -33,3 +33,14 @@ desktop.ini
 # File temporanei
 *.tmp
 *.bak
+
+# Copie di sicurezza fatte prima di una correzione: servono sul momento,
+# non nella storia del progetto.
+*.prima-*
+roman.db.backup*
+
+# Uscita grezza del modello e prompt: si rigenerano, e quella tenuta finora
+# era degenerata (frasi da sei parole ripetute a raffica). Non e' materiale
+# da conservare.
+archivio/generato/
+capitoli_generati/

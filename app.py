@@ -88,7 +88,23 @@ def save_wp_settings(data):
 
 load_dotenv()
 ADMIN_USER = os.getenv("ADMIN_USER", "vash")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "mammata")
+
+# La password NON sta piu' nel sorgente. Questo repository e' pubblico: una
+# password scritta qui e' la password di ogni istanza che nessuno ha
+# configurato, e chiunque legga il codice la conosce.
+#
+# Se ADMIN_PASS non e' impostata se ne genera una a caso e la si stampa una
+# volta sola all'avvio. Meglio una password da copiare dal log che una che
+# sanno tutti.
+ADMIN_PASS = os.getenv("ADMIN_PASS", "")
+if not ADMIN_PASS:
+    import secrets as _secrets
+    ADMIN_PASS = _secrets.token_urlsafe(12)
+    print("=" * 62, flush=True)
+    print("ADMIN_PASS non impostata. Password generata per questo avvio:", flush=True)
+    print("    %s" % ADMIN_PASS, flush=True)
+    print("Per fissarla, scrivila in .env come ADMIN_PASS=...", flush=True)
+    print("=" * 62, flush=True)
 
 def get_env_var(key, default=""):
     if key == 'PROJECT_TIMELINE':
@@ -399,6 +415,15 @@ def ensure_agent_registry_ready():
     conn = get_conn()
     try:
         ensure_agent_registry_schema(conn)
+        # Le tabelle da sole non servono a niente: senza gli agenti
+        # predefiniti resolve_chat_model_from_registry restituisce sempre None
+        # e tutto il registro - ruoli, prompt, instradamento - resta inerte.
+        # Il popolamento era raggiungibile solo da POST /api/agents/bootstrap,
+        # cioe' da nessuno.
+        try:
+            registry_seed_defaults(conn)
+        except Exception as e:
+            logger.warning(f"Agenti predefiniti non inseriti: {e}")
     finally:
         conn.close()
 
